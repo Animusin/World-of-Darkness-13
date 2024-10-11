@@ -18,6 +18,7 @@ GLOBAL_LIST_INIT(sarcophagus_passwords,
 	"LILITH",
 	"FORGIVENESS",
 	"DARKFATHER"))
+
 GLOBAL_LIST_INIT(caesar_cipher,
 	list(
 	"A" = 1,

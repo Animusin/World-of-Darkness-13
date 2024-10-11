@@ -13,7 +13,6 @@
 		INVOKE_ASYNC(src, .proc/set_species, dna.species.type)
 
 	//initialise organs
-	create_internal_organs() //most of it is done in set_species now, this is only for parent call
 	internal_organs += new /obj/item/organ/brain
 	internal_organs += new /obj/item/organ/tongue
 	internal_organs += new /obj/item/organ/eyes
@@ -22,6 +21,7 @@
 	internal_organs += new /obj/item/organ/heart
 	internal_organs += new /obj/item/organ/lungs
 	internal_organs += new /obj/item/organ/ears
+	create_internal_organs() //most of it is done in set_species now, this is only for parent call
 	..()
 
 	RegisterSignal(src, COMSIG_COMPONENT_CLEAN_FACE_ACT, .proc/clean_face)
@@ -31,6 +31,7 @@
 	AddElement(/datum/element/ridable, /datum/component/riding/creature/human)
 	GLOB.human_list += src
 	phonevoicetag = length(GLOB.human_list)+10
+	physiology = new
 
 /mob/living/carbon/human/proc/setup_human_dna()
 	//initialize dna. for spawned humans; overwritten by other code

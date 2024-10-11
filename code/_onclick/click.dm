@@ -603,12 +603,12 @@
 /mob/proc/check_click_intercept(params,A)
 	//Client level intercept
 	if(client?.click_intercept)
-		if(call(client.click_intercept, "InterceptClickOn")(src, params, A))
+		if(RUSTG_CALL(client.click_intercept, "InterceptClickOn")(src, params, A))
 			return TRUE
 
 	//Mob level intercept
 	if(click_intercept)
-		if(call(click_intercept, "InterceptClickOn")(src, params, A))
+		if(RUSTG_CALL(click_intercept, "InterceptClickOn")(src, params, A))
 			return TRUE
 
 	return FALSE
