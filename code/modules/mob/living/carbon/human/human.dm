@@ -13,6 +13,14 @@
 		INVOKE_ASYNC(src, .proc/set_species, dna.species.type)
 
 	//initialise organs
+	internal_organs += new /obj/item/organ/brain
+	internal_organs += new /obj/item/organ/tongue
+	internal_organs += new /obj/item/organ/eyes
+	internal_organs += new /obj/item/organ/liver
+	internal_organs += new /obj/item/organ/stomach
+	internal_organs += new /obj/item/organ/heart
+	internal_organs += new /obj/item/organ/lungs
+	internal_organs += new /obj/item/organ/ears
 	create_internal_organs() //most of it is done in set_species now, this is only for parent call
 	physiology = new()
 
