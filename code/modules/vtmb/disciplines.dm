@@ -1,6 +1,6 @@
 /datum/discipline
-	var/name = "Shit Aggresively"
-	var/desc = "Shit with blood, cope and seethe"
+	var/name = "Vampiric Discipline"
+	var/desc = "Discipline with powers such as..."
 	var/icon_state
 	var/cost = 2
 	var/ranged = FALSE
@@ -14,6 +14,7 @@
 
 	var/level_casting = 1	//which level we want to cast
 	var/clane_restricted = FALSE	//Only for specified clans
+	var/clane_exclusion = FALSE
 	var/dead_restricted = TRUE
 
 /datum/discipline/proc/post_gain(var/mob/living/carbon/human/H)
@@ -1193,12 +1194,13 @@
 	violates_masquerade = TRUE
 	clane_restricted = TRUE
 	dead_restricted = FALSE
+	var/exclusive_clan = "Old Clan Tzimisce"
 
 /datum/discipline/vicissitude/activate(mob/living/target, mob/living/carbon/human/caster)
 	. = ..()
 	if(iswerewolf(target))
 		playsound(caster.loc, 'code/modules/ziggers/sounds/vicissitude.ogg', 50, TRUE)
-		caster.adjustFireLoss(50)		//абузеры страдайте
+		caster.adjustFireLoss(50)		//abusers suffer
 		caster.emote("scream")
 	if(ishuman(target))
 		var/mob/living/carbon/human/H = target
@@ -1283,7 +1285,7 @@
 						qdel(target)
 		else
 			target.emote("scream")
-			target.apply_damage(10*level_casting, BRUTE, BODY_ZONE_CHEST)
+			target.apply_damage(20*level_casting, BRUTE, BODY_ZONE_CHEST)
 			if(prob(5*level_casting))
 				var/obj/item/bodypart/B = H.get_bodypart(pick(BODY_ZONE_R_ARM, BODY_ZONE_L_ARM, BODY_ZONE_R_LEG, BODY_ZONE_L_LEG))
 				if(B)

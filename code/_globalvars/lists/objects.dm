@@ -50,6 +50,8 @@ GLOBAL_LIST_EMPTY(air_vent_names)			// Name list of all air vents
 GLOBAL_LIST_EMPTY(subscribers_numbers_list)
 GLOBAL_LIST_EMPTY(phone_numbers_list)
 GLOBAL_LIST_EMPTY(phones_list)
+GLOBAL_LIST_EMPTY(published_numbers)		//Numbers that are published
+GLOBAL_LIST_EMPTY(published_number_names)	//Names of published numbers.
 
 GLOBAL_LIST_EMPTY(masquerade_breakers_list)
 GLOBAL_LIST_EMPTY(masquerade_latejoin)
@@ -60,7 +62,7 @@ GLOBAL_LIST_EMPTY(totems)
 GLOBAL_LIST_EMPTY(umbra_portals)
 
 //Dear God
-GLOBAL_LIST_INIT(donaters, list("snekthegreat", "akrolon", "agateophobia", "raikyh", "pluviifera"))
+GLOBAL_LIST_INIT(donaters, list("snekthegreat", "akrolon", "agateophobia", "raikyh", "pluviifera", "fourty2"))
 
 //666.6 - owners
 //6.9 - developers, noddists, other

@@ -76,8 +76,7 @@
 
 /obj/item/vamp/keys/supply
 	name = "Supply keys"
-	accesslocks = list("supply",
-											"anarch")
+	accesslocks = list("supply")
 	color = "#434343"
 
 /obj/item/vamp/keys/npc
@@ -119,6 +118,10 @@
 /obj/item/vamp/keys/salubri
 	name = "Conspiracy keys"
 	accesslocks = list("salubri")
+
+/obj/item/vamp/keys/old_clan_tzimisce
+	name = "Regal keys"
+	accesslocks = list("old_clan_tzimisce")
 
 /obj/item/vamp/keys/malkav
 	name = "Insane keys"
@@ -519,6 +522,15 @@
 	baseicon = "oldwood"
 	locked = TRUE
 	lock_id = "salubri"
+	burnable = FALSE
+	hackable = FALSE
+	hack_difficulty = 5
+
+/obj/structure/vampdoor/old_clan_tzimisce
+	icon_state = "oldwood-1"
+	baseicon = "oldwood"
+	locked = TRUE
+	lock_id = "old_clan_tzimisce"
 	burnable = FALSE
 	hackable = FALSE
 	hack_difficulty = 5

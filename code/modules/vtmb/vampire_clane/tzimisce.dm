@@ -12,7 +12,6 @@
 	male_clothes = "/obj/item/clothing/under/vampire/sport"
 	female_clothes = "/obj/item/clothing/under/vampire/red"
 	enlightement = TRUE
-	whitelist = list("akrolon", "agateophobia", "raikyh", "pluviifera", "amzee")
 	var/obj/item/heirl
 
 /mob/living/carbon/human
@@ -820,12 +819,12 @@
 	mob_biotypes = MOB_ORGANIC|MOB_HUMANOID
 	speak_chance = 0
 	speed = -1
-	maxHealth = 500
-	health = 500
+	maxHealth = 575
+	health = 575
 	butcher_results = list(/obj/item/stack/human_flesh = 20)
 	harm_intent_damage = 5
-	melee_damage_lower = 30
-	melee_damage_upper = 30
+	melee_damage_lower = 70
+	melee_damage_upper = 70
 	attack_verb_continuous = "slashes"
 	attack_verb_simple = "slash"
 	attack_sound = 'sound/weapons/slash.ogg'
