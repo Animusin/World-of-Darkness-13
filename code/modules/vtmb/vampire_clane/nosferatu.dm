@@ -26,13 +26,14 @@
 /datum/vampireclane/nosferatu/on_gain(mob/living/carbon/human/H)
 	..()
 	H.remove_overlay(UPPER_EARS_LAYER)
-	var/mutable_appearance/ears_overlay = mutable_appearance('code/modules/ziggers/icons.dmi', "nosferatu_ears", -UPPER_EARS_LAYER)
+	var/mutable_appearance/ears_overlay = mutable_appearance('code/modules/wod13/icons.dmi', "nosferatu_ears", -UPPER_EARS_LAYER)
 	H.overlays_standing[UPPER_EARS_LAYER] = ears_overlay
 	H.apply_overlay(UPPER_EARS_LAYER)
 	var/obj/item/organ/eyes/night_vision/NV = new()
 	NV.Insert(H, TRUE, FALSE)
+	H.ventcrawler = VENTCRAWLER_ALWAYS
 
 /datum/vampireclane/nosferatu/post_gain(mob/living/carbon/human/H)
 	..()
-	if(H.frakcja != "Camarilla" && H.frakcja != "Anarch" && H.frakcja != "Sabbat")
-		H.frakcja = "Nosferatu"
+	if(H.vampire_faction != "Camarilla" && H.vampire_faction != "Anarch" && H.vampire_faction != "Sabbat")
+		H.vampire_faction = "Nosferatu"

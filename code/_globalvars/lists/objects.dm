@@ -55,21 +55,10 @@ GLOBAL_LIST_EMPTY(published_number_names)	//Names of published numbers.
 
 GLOBAL_LIST_EMPTY(masquerade_breakers_list)
 GLOBAL_LIST_EMPTY(masquerade_latejoin)
-GLOBAL_LIST_EMPTY(niggers)
 
 GLOBAL_LIST_EMPTY(generators)
 GLOBAL_LIST_EMPTY(totems)
 GLOBAL_LIST_EMPTY(umbra_portals)
-
-//Dear God
-GLOBAL_LIST_INIT(donaters, list("snekthegreat", "akrolon", "agateophobia", "raikyh", "pluviifera", "fourty2"))
-
-//666.6 - owners
-//6.9 - developers, noddists, other
-//1.01 - not known
-
-// [ChillRaccoon] - better to make it through DataBase connection, DB data updates server data every round start
-GLOBAL_LIST_INIT(donaters_amount, list())
 
 GLOBAL_LIST_EMPTY(fucking_joined)
 

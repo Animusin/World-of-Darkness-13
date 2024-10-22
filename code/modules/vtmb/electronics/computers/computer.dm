@@ -3,7 +3,7 @@ GLOBAL_LIST_EMPTY(vampire_computers)
 /obj/vampire_computer
 	name = "computer"
 	desc = "See the Internet."
-	icon = 'code/modules/ziggers/props.dmi'
+	icon = 'code/modules/wod13/props.dmi'
 	icon_state = "computer"
 	plane = GAME_PLANE
 	layer = CAR_LAYER
@@ -174,6 +174,8 @@ GLOBAL_LIST_EMPTY(vampire_computers)
 						C.icon_state = "computermessage"
 					else
 						C.say("Announcement sent.")
+				for(var/obj/item/vamp/phone/P in GLOB.phones_list)
+					P.say("New announcement!")
 			return TRUE
 		if("delete_email")
 			var/datum/app/gmail/gmail = apps[3]
