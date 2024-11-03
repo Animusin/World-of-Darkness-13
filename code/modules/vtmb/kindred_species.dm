@@ -18,9 +18,6 @@
 	dust_anim = "dust-h"
 	var/datum/vampireclane/clane
 
-/mob/living
-	var/list/knowscontacts = list()
-
 /datum/action/vampireinfo
 	name = "About Me"
 	desc = "Check assigned role, clan, generation, humanity, masquerade, known disciplines, known contacts etc."
@@ -144,6 +141,15 @@
 		var/obj/keypad/armory/K = find_keypad(/obj/keypad/armory)
 		if(K && (host.mind.assigned_role == "Prince" || host.mind.assigned_role == "Sheriff"))
 			dat += "<b>The pincode for the armory keypad is: [K.pincode]</b><BR>"
+		var/obj/keypad/bankvault/V = find_keypad(/obj/keypad/bankvault)
+		if(V && (host.mind.assigned_role == "Giovanni Boss"))
+			dat += "<b>The pincode for the bank vault keypad is: [V.pincode]</b><BR>"
+		if(V && (host.mind.assigned_role == "Giovanni Member"))
+			if(prob(50))
+				dat += "<b>The pincode for the bank vault keypad is: [V.pincode]</b><BR>"
+			else
+				dat += "<b>Unfortunately you don't know the vault code.</b><BR>"
+
 		if(length(host.knowscontacts) > 0)
 			dat += "<b>I know some other of my kind in this city. Need to check my phone, there definetely should be:</b><BR>"
 			for(var/i in host.knowscontacts)
