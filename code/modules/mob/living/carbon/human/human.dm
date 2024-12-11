@@ -10,7 +10,7 @@
 	setup_human_dna()
 
 	if(dna.species)
-		INVOKE_ASYNC(src, .proc/set_species, dna.species.type)
+		INVOKE_ASYNC(src, PROC_REF(set_species), dna.species.type)
 
 	//initialise organs
 	internal_organs += new /obj/item/organ/brain
@@ -24,10 +24,9 @@
 	create_internal_organs() //most of it is done in set_species now, this is only for parent call
 	physiology = new()
 
+	. = ..()
 
-	..()
-
-	RegisterSignal(src, COMSIG_COMPONENT_CLEAN_FACE_ACT, .proc/clean_face)
+	RegisterSignal(src, COMSIG_COMPONENT_CLEAN_FACE_ACT, PROC_REF(clean_face))
 	AddComponent(/datum/component/personal_crafting)
 	AddComponent(/datum/component/footstep, FOOTSTEP_MOB_HUMAN, 1, -6)
 	AddComponent(/datum/component/bloodysoles/feet)
@@ -225,7 +224,8 @@
 			to_chat(usr, "<span class='warning'>You can't reach that! Something is covering it.</span>")
 			return
 
-	if(href_list["pockets"] && usr.canUseTopic(src, BE_CLOSE, NO_DEXTERITY)) //TODO: Make it match (or intergrate it into) strippanel so you get 'item cannot fit here' warnings if mob_can_equip fails
+	var/mob/living/L = usr
+	if(href_list["pockets"] && (usr.canUseTopic(src, BE_CLOSE, NO_DEXTERITY) || (L.enhanced_strip && (get_dist(usr, src) <= 3)))) //TODO: Make it match (or intergrate it into) strippanel so you get 'item cannot fit here' warnings if mob_can_equip fails
 		if(isnpc(src))
 			var/mob/living/carbon/human/npc/N = src
 			if(N.fights_anyway)
@@ -252,7 +252,8 @@
 			delay_denominator = 4
 		else
 			return
-
+		if(L.enhanced_strip)
+			delay_denominator = POCKET_STRIP_DELAY	//so it's instant 1 tick
 		if(do_mob(usr, src, POCKET_STRIP_DELAY/delay_denominator)) //placing an item into the pocket is 4 times faster
 			if(pocket_item)
 				if(pocket_item == (pocket_id == ITEM_SLOT_RPOCKET ? r_store : l_store)) //item still in the pocket we search
@@ -290,7 +291,7 @@
 		if(!ishuman(usr))
 			return
 		var/mob/living/carbon/human/H = usr
-		if(H.stat > 2)
+		if(H.stat > UNCONSCIOUS)
 			return
 		if(usr == src)
 			return
@@ -303,8 +304,9 @@
 				return
 			var/reason = input(usr, "Write a description of violation:", "Spot a Masquerade violation") as text|null
 			if(reason)
-				masquerade_votes = masquerade_votes+1
-				message_admins("[H]([H.key]) spotted [src]'s([key]) masqureade violation. Description: [reason]")
+				reason = trim(copytext_char(sanitize(reason), 1, MAX_MESSAGE_LEN))
+				masquerade_votes++
+				message_admins("[ADMIN_LOOKUPFLW(H)] spotted [ADMIN_LOOKUPFLW(src)]'s Masquerade violation. Description: [reason]")
 				H.voted_for |= dna.real_name
 				if(masquerade_votes > 1)
 					masquerade_votes = 0
@@ -858,7 +860,7 @@
 			electrocution_skeleton_anim = mutable_appearance(icon, "electrocuted_base")
 			electrocution_skeleton_anim.appearance_flags |= RESET_COLOR|KEEP_APART
 		add_overlay(electrocution_skeleton_anim)
-		addtimer(CALLBACK(src, .proc/end_electrocution_animation, electrocution_skeleton_anim), anim_duration)
+		addtimer(CALLBACK(src, PROC_REF(end_electrocution_animation), electrocution_skeleton_anim), anim_duration)
 
 	else //or just do a generic animation
 		flick_overlay_view(image(icon,src,"electrocuted_generic",ABOVE_MOB_LAYER), src, anim_duration)
@@ -1301,7 +1303,7 @@
 
 /mob/living/carbon/human/species/Initialize()
 	. = ..()
-	INVOKE_ASYNC(src, .proc/set_species, race)
+	INVOKE_ASYNC(src, PROC_REF(set_species), race)
 
 /mob/living/carbon/human/species/set_species(datum/species/mrace, icon_update, pref_load)
 	. = ..()
@@ -1329,6 +1331,19 @@
 	equip_to_slot_or_del(new /obj/item/clothing/head/vampire/nazi(src), ITEM_SLOT_HEAD)
 	equip_to_slot_or_del(new /obj/item/clothing/shoes/vampire/jackboots/high(src), ITEM_SLOT_FEET)
 	equip_to_slot_or_del(new /obj/item/clothing/under/vampire/nazi(src), ITEM_SLOT_ICLOTHING)
+
+//prevents this thing from being stripped
+/mob/living/carbon/human/species/vamp_mannequin/nazi/Topic(href, href_list)
+	if(href_list["item"])
+		message_admins("[ADMIN_LOOKUPFLW(usr)] tried to strip the Nazi mannequin.")
+		to_chat(usr, "<span class='warning'>You don't really want to pick that up...</span>")
+		return
+	else
+		..()
+
+//prevents anything from being dropped by the mannequin on gib
+/mob/living/carbon/human/species/vamp_mannequin/nazi/gib(no_brain, no_organs, no_bodyparts, safe_gib)
+	qdel(src)
 
 /mob/living/carbon/human/species/vamp_mannequin/conquestador
 

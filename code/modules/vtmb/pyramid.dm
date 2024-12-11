@@ -5,6 +5,7 @@
 	icon = 'code/modules/wod13/items.dmi'
 	onflooricon = 'code/modules/wod13/onfloor.dmi'
 	w_class = WEIGHT_CLASS_SMALL
+	is_magic = TRUE
 	var/list/rituals = list()
 
 /obj/item/arcane_tome/Initialize()
@@ -192,8 +193,8 @@
 	obj_integrity = 100
 
 /obj/ritualrune/identification
-	name = "Occult Items Identification"
-	desc = "Identificates single occult item"
+	name = "Identification Rune"
+	desc = "Identifies a single occult item."
 	icon_state = "rune4"
 	word = "IN'DAR"
 
@@ -206,8 +207,8 @@
 			return
 
 /obj/ritualrune/question
-	name = "Question to Ancestors"
-	desc = "Summon souls from the dead. Ask a question and get answers."
+	name = "Question to Ancestors Rune"
+	desc = "Summon souls from the dead. Ask a question and get answers. Requires a bloodpack."
 	icon_state = "rune5"
 	word = "TE-ME'LL"
 	thaumlevel = 3
@@ -221,7 +222,8 @@
 	faction = list("Tremere")
 
 /obj/ritualrune/question/complete()
-	var/list/mob/dead/observer/candidates = pollCandidatesForMob("Do you wish to answer a question? (You are allowed to spread meta information)", null, null, null, 50, src)
+	visible_message("<span class='notice'>A call rings out to the dead from the [src.name] rune...</span>")
+	var/list/mob/dead/observer/candidates = pollCandidatesForMob("Do you wish to answer a question? (You are allowed to spread meta information)", null, null, null, 10 SECONDS, src)
 	for(var/mob/dead/observer/G in GLOB.player_list)
 		if(G.key)
 			to_chat(G, "<span class='ghostalert'>Question rune has been triggered.</span>")
@@ -229,12 +231,15 @@
 		var/mob/dead/observer/C = pick(candidates)
 		var/mob/living/simple_animal/hostile/ghost/tremere/TR = new(loc)
 		TR.key = C.key
+		TR.name = C.name
 		playsound(loc, 'code/modules/wod13/sounds/thaum.ogg', 50, FALSE)
 		qdel(src)
+	else
+		visible_message("<span class='notice'>No one answers the [src.name] rune's call.</span>")
 
 /obj/ritualrune/teleport
 	name = "Teleportation Rune"
-	desc = "Move your body among the city streets."
+	desc = "Move your body among the city streets. Requires a bloodpack."
 	icon_state = "rune6"
 	word = "POR'TALE"
 	thaumlevel = 5
@@ -274,11 +279,11 @@
 
 /obj/ritualrune/curse
 	name = "Curse Rune"
-	desc = "Curse your enemies in distance."
+	desc = "Curse your enemies in distance. Requires a heart."
 	icon_state = "rune7"
 	word = "CUS-RE'S"
 	thaumlevel = 5
-	sacrifice = /obj/item/organ/penis
+	sacrifice = /obj/item/organ/heart
 
 /obj/ritualrune/curse/complete()
 	if(!activated)
@@ -325,29 +330,30 @@
 /obj/ritualrune/gargoyle/complete()
 	for(var/mob/living/carbon/human/H in loc)
 		if(H)
-			if(H.stat > 1)
-				if(H.key)
-					var/mob/living/simple_animal/hostile/gargoyle/Y = new(loc)
-					Y.key = H.key
-					Y.my_creator = last_activator
-					qdel(H)
-					playsound(loc, 'code/modules/wod13/sounds/thaum.ogg', 50, FALSE)
-					qdel(src)
-					return
-				else
+			if(H.stat > SOFT_CRIT)
+				for(var/datum/action/A in H.actions)
+					if(A)
+						if(A.vampiric)
+							A.Remove(H)
+				H.revive(TRUE)
+				H.set_species(/datum/species/kindred)
+				H.clane = new /datum/vampireclane/gargoyle()
+				H.clane.on_gain(H)
+				H.clane.post_gain(H)
+				H.forceMove(get_turf(src))
+				H.create_disciplines(FALSE, H.clane.clane_disciplines)
+				if(!H.key)
 					var/list/mob/dead/observer/candidates = pollCandidatesForMob("Do you wish to play as Sentient Gargoyle?", null, null, null, 50, src)
 					for(var/mob/dead/observer/G in GLOB.player_list)
 						if(G.key)
 							to_chat(G, "<span class='ghostalert'>Gargoyle Transformation rune has been triggered.</span>")
 					if(LAZYLEN(candidates))
 						var/mob/dead/observer/C = pick(candidates)
-						var/mob/living/simple_animal/hostile/gargoyle/Y = new(loc)
-						Y.key = C.key
-						Y.my_creator = last_activator
-						qdel(H)
-						playsound(loc, 'code/modules/wod13/sounds/thaum.ogg', 50, FALSE)
-						qdel(src)
-						return
+						H.key = C.key
+//					Y.key = C.key
+//					Y.my_creator = last_activator
+				playsound(loc, 'code/modules/wod13/sounds/thaum.ogg', 50, FALSE)
+				qdel(src)
 				return
 			else
 				playsound(loc, 'code/modules/wod13/sounds/thaum.ogg', 50, FALSE)

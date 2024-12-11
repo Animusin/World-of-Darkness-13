@@ -461,8 +461,8 @@
 		if(isnull(client.recent_examines[A]) || client.recent_examines[A] < world.time)
 			result = A.examine(src)
 			client.recent_examines[A] = world.time + EXAMINE_MORE_TIME // set the value to when the examine cooldown ends
-			RegisterSignal(A, COMSIG_PARENT_QDELETING, .proc/clear_from_recent_examines, override=TRUE) // to flush the value if deleted early
-			addtimer(CALLBACK(src, .proc/clear_from_recent_examines, A), EXAMINE_MORE_TIME)
+			RegisterSignal(A, COMSIG_PARENT_QDELETING, PROC_REF(clear_from_recent_examines), override=TRUE) // to flush the value if deleted early
+			addtimer(CALLBACK(src, PROC_REF(clear_from_recent_examines), A), EXAMINE_MORE_TIME)
 			handle_eye_contact(A)
 		else
 			result = A.examine_more(src)
@@ -554,11 +554,11 @@
 	// check to see if their face is blocked or, if not, a signal blocks it
 	if(examined_mob.is_face_visible() && SEND_SIGNAL(src, COMSIG_MOB_EYECONTACT, examined_mob, TRUE) != COMSIG_BLOCK_EYECONTACT)
 		var/msg = "<span class='smallnotice'>You make eye contact with [examined_mob].</span>"
-		addtimer(CALLBACK(GLOBAL_PROC, .proc/to_chat, src, msg), 3) // so the examine signal has time to fire and this will print after
+		addtimer(CALLBACK(GLOBAL_PROC, PROC_REF(to_chat), src, msg), 3) // so the examine signal has time to fire and this will print after
 
 	if(is_face_visible() && SEND_SIGNAL(examined_mob, COMSIG_MOB_EYECONTACT, src, FALSE) != COMSIG_BLOCK_EYECONTACT)
 		var/msg = "<span class='smallnotice'>[src] makes eye contact with you.</span>"
-		addtimer(CALLBACK(GLOBAL_PROC, .proc/to_chat, examined_mob, msg), 3)
+		addtimer(CALLBACK(GLOBAL_PROC, PROC_REF(to_chat), examined_mob, msg), 3)
 
 /**
  * Point at an atom
@@ -713,22 +713,23 @@
 //		else
 //			return
 
-	if(respawntimeofdeath+12000 > world.time)
+	if(!usr.can_respawn())
 		if(istype(usr.client.mob, /mob/dead/observer))
 			var/mob/dead/observer/obs = usr.client.mob
 			if(obs.auspex_ghosted)
-				to_chat(usr, "<span class='notice'>You cannot respawn while using auspex!</span>")
+				to_chat(usr, "<span class='notice'>You cannot respawn while astrally projecting!</span>")
 				return
-			else
-				var/timetoresp = round(((respawntimeofdeath+12000)-world.time)/10)
-				to_chat(usr, "<span class='notice'>You need to wait [timetoresp] seconds before respawn</span>")
-				if(check_rights_for(usr.client, R_ADMIN))
-					if(alert(usr, "Do you want to respawn faster than usual player? (only admins can)", "Respawn", "Yes", "No") != "Yes")
-						return
+
+		to_chat(usr, "<span class='notice'>You need to wait [DisplayTimeText(GLOB.respawn_timers[usr.client.ckey] + 10 MINUTES - world.time)] before you can respawn.</span>")
+
+		if(check_rights_for(usr.client, R_ADMIN))
+			if(alert(usr, "Do you want to respawn faster than usual player? (only admins can)", "Respawn", "Yes", "No") != "Yes")
+				return
+			GLOB.respawn_timers[usr.client.ckey] = 0
 		else
 			return
 
-	log_game("[key_name(usr)] used abandon mob.")
+	log_game("[key_name(usr)] respawned.")
 
 	to_chat(usr, "<span class='boldnotice'>Please roleplay correctly!</span>")
 
@@ -1202,10 +1203,10 @@
 		var/mob/living/carbon/human/H = src
 		if(istype(H.get_active_held_item(), /obj/item/gun))
 			shootahell = TRUE
-		for(var/atom/movable/screen/disciplines/DISCP in H.hud_used.static_inventory)
-			if(DISCP)
-				if(DISCP.active)
-					discipliner = TRUE
+//		for(var/atom/movable/screen/disciplines/DISCP in H.hud_used.static_inventory)
+//			if(DISCP)
+//				if(DISCP.active)
+//					discipliner = TRUE
 	if(examine_cursor_icon && client.keys_held["Shift"]) //mouse shit is hardcoded, make this non hard-coded once we make mouse modifiers bindable
 		client.mouse_pointer_icon = examine_cursor_icon
 	else if(discipliner)

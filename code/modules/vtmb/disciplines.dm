@@ -1,3 +1,103 @@
+/mob/living
+	var/datum/action/discipline/discipline_ranged
+
+/datum/action/discipline
+	check_flags = AB_CHECK_HANDS_BLOCKED|AB_CHECK_CONSCIOUS
+	button_icon = 'code/modules/wod13/UI/actions.dmi' //This is the file for the BACKGROUND icon
+	background_icon_state = "discipline" //And this is the state for the background icon
+
+	icon_icon = 'code/modules/wod13/UI/actions.dmi' //This is the file for the ACTION icon
+	button_icon_state = "discipline" //And this is the state for the action icon
+	vampiric = TRUE
+	var/level_icon_state = "1" //And this is the state for the action icon
+	var/datum/discipline/discipline
+	var/active_check = FALSE
+
+/datum/action/discipline/Trigger()
+	if(discipline && isliving(owner))
+		var/mob/living/owning = owner
+		if(discipline.ranged)
+			if(!active_check)
+				active_check = TRUE
+				if(owning.discipline_ranged)
+					owning.discipline_ranged.Trigger()
+				owning.discipline_ranged = src
+				if(button)
+					button.color = "#970000"
+			else
+				active_check = FALSE
+				owning.discipline_ranged = null
+				button.color = "#ffffff"
+		else
+			if(discipline)
+				if(discipline.check_activated(owner, owner))
+					discipline.activate(owner, owner)
+	. = ..()
+
+/datum/action/discipline/ApplyIcon(atom/movable/screen/movable/action_button/current_button, force = FALSE)
+	if(owner)
+		if(owner.client)
+			if(owner.client.prefs)
+				if(owner.client.prefs.old_discipline)
+					button_icon = 'code/modules/wod13/disciplines.dmi'
+					icon_icon = 'code/modules/wod13/disciplines.dmi'
+				else
+					button_icon = 'code/modules/wod13/UI/actions.dmi'
+					icon_icon = 'code/modules/wod13/UI/actions.dmi'
+	if(icon_icon && button_icon_state && ((current_button.button_icon_state != button_icon_state) || force))
+		current_button.cut_overlays(TRUE)
+		if(discipline)
+			current_button.name = discipline.name
+			current_button.desc = discipline.desc
+			current_button.add_overlay(mutable_appearance(icon_icon, "[discipline.icon_state]"))
+			current_button.button_icon_state = "[discipline.icon_state]"
+			if(discipline.leveled)
+				current_button.add_overlay(mutable_appearance(icon_icon, "[discipline.level_casting]"))
+		else
+			current_button.add_overlay(mutable_appearance(icon_icon, button_icon_state))
+			current_button.button_icon_state = button_icon_state
+
+/datum/action/discipline/proc/switch_level()
+	SEND_SOUND(owner, sound('code/modules/wod13/sounds/highlight.ogg', 0, 0, 50))
+	if(discipline)
+		if(discipline.level_casting < discipline.level)
+			discipline.level_casting = discipline.level_casting+1
+			if(button)
+				ApplyIcon(button, TRUE)
+			return
+		else
+			discipline.level_casting = 1
+			if(button)
+				ApplyIcon(button, TRUE)
+			return
+
+/mob/living/Click()
+	if(isliving(usr) && usr != src)
+		var/mob/living/L = usr
+		if(L.discipline_ranged)
+			L.discipline_ranged.active_check = FALSE
+			if(L.discipline_ranged.button)
+				animate(L.discipline_ranged.button, color = "#ffffff", time = 10, loop = 1)
+			if(L.discipline_ranged.discipline.check_activated(src, usr))
+				L.discipline_ranged.discipline.activate(src, usr)
+			L.discipline_ranged = null
+	. = ..()
+
+//			if(DISCP)
+//				if(DISCP.active)
+//					DISCP.range_activate(src, SH)
+//					SH.face_atom(src)
+//					return
+
+/atom/movable/screen/movable/action_button/Click(location,control,params)
+	if(istype(linked_action, /datum/action/discipline))
+		var/list/modifiers = params2list(params)
+		if(LAZYACCESS(modifiers, "right"))
+			var/datum/action/discipline/D = linked_action
+			D.switch_level()
+			return
+	. = ..()
+
 /datum/discipline
 	///Name of this Discipline.
 	var/name = "Vampiric Discipline"
@@ -17,6 +117,7 @@
 	var/violates_masquerade = FALSE
 	///What rank, or how many dots the caster has in this Discipline.
 	var/level = 1
+	var/leveled = TRUE
 	///The sound that plays when any power of this Discipline is activated.
 	var/activate_sound = 'code/modules/wod13/sounds/bloodhealing.ogg'
 	///Whether this Discipline's cooldowns are multipled by the level it's being casted at.
@@ -30,6 +131,8 @@
 	var/clane_restricted = FALSE
 	///Whether this Discipline is restricted from affecting dead people.
 	var/dead_restricted = TRUE
+
+	var/next_fire_after = 0
 
 /datum/discipline/proc/post_gain(var/mob/living/carbon/human/H)
 	return
@@ -125,12 +228,17 @@
 			return
 
 /datum/discipline/proc/check_activated(var/mob/living/target, var/mob/living/carbon/human/caster)
-	if(caster.stat >= 2 || caster.IsSleeping() || caster.IsUnconscious() || caster.IsParalyzed() || caster.IsStun() || HAS_TRAIT(caster, TRAIT_RESTRAINED) || !isturf(caster.loc))
+	if(caster.stat >= HARD_CRIT || caster.IsSleeping() || caster.IsUnconscious() || caster.IsParalyzed() || caster.IsStun() || HAS_TRAIT(caster, TRAIT_RESTRAINED) || !isturf(caster.loc))
 		return FALSE
 	var/plus = 0
 	if(HAS_TRAIT(caster, TRAIT_HUNGRY))
 		plus = 1
 	if(caster.bloodpool < cost+plus)
+		SEND_SOUND(caster, sound('code/modules/wod13/sounds/need_blood.ogg', 0, 0, 75))
+		to_chat(caster, "<span class='warning'>You don't have enough <b>BLOOD</b> to use this discipline.</span>")
+		return FALSE
+	if(world.time < next_fire_after)
+		to_chat(caster, "<span class='warning'>It's too soon to use this discipline again!</span>")
 		return FALSE
 	if(target.stat == DEAD && dead_restricted)
 		return FALSE
@@ -145,9 +253,9 @@
 	caster.bloodpool = max(0, caster.bloodpool-(cost+plus))
 	caster.update_blood_hud()
 	if(ranged)
-		to_chat(caster, "<span class='notice'>You activate the [name] on [target].</span>")
+		to_chat(caster, "<span class='notice'>You activate [name] on [target].</span>")
 	else
-		to_chat(caster, "<span class='notice'>You activate the [name].</span>")
+		to_chat(caster, "<span class='notice'>You activate [name].</span>")
 	if(ranged)
 		if(isnpc(target) && !fearless)
 			var/mob/living/carbon/human/npc/NPC = target
@@ -171,19 +279,20 @@
 		return
 	if(!caster)
 		return
-//	if(!target)
-//		var/choice = input(caster, "Choose your target", "Available Targets") as mob in oviewers(4, caster)
-//		if(choice)
-//			target = choice
-//		else
-//			return
+
+	if(leveldelay)
+		next_fire_after = world.time+delay*level_casting
+	else
+		next_fire_after = world.time+delay
+
+	log_attack("[key_name(caster)] casted level [src.level_casting] of the Discipline [src.name][target == caster ? "." : " on [key_name(target)]"]")
 
 /datum/discipline/animalism
 	name = "Animalism"
 	desc = "Summons Spectral Animals over your targets. Violates Masquerade."
 	icon_state = "animalism"
 	cost = 1
-	delay = 20
+	delay = 8 SECONDS
 	ranged = FALSE
 	violates_masquerade = TRUE
 	activate_sound = 'code/modules/wod13/sounds/wolves.ogg'
@@ -211,7 +320,7 @@
 	. = ..()
 	if(!AN)
 		AN = new(caster)
-	var/limit = min(3, level)+caster.social-1+caster.more_companions
+	var/limit = min(2, level) + caster.social + caster.more_companions - 1
 	if(length(caster.beastmaster) >= limit)
 		var/mob/living/simple_animal/hostile/beastmaster/B = pick(caster.beastmaster)
 		B.death()
@@ -266,10 +375,10 @@
 //			caster.remove_overlay(PROTEAN_LAYER)
 //			caster.overlays_standing[PROTEAN_LAYER] = protean_overlay
 //			caster.apply_overlay(PROTEAN_LAYER)
-			spawn(200+caster.discipline_time_plus)
+			spawn(20 SECONDS + caster.discipline_time_plus)
 				if(caster && caster.stat != DEAD)
 					AN.Restore(AN.myshape)
-					caster.Stun(15)
+					caster.Stun(1.5 SECONDS)
 
 /datum/discipline/auspex
 	name = "Auspex"
@@ -277,7 +386,7 @@
 	icon_state = "auspex"
 	cost = 1
 	ranged = FALSE
-	delay = 50
+	delay = 5 SECONDS
 	leveldelay = TRUE
 
 /datum/discipline/auspex/activate(mob/living/target, mob/living/carbon/human/caster)
@@ -328,7 +437,7 @@
 	icon_state = "celerity"
 	cost = 1
 	ranged = FALSE
-	delay = 50
+	delay = 7.5 SECONDS
 	violates_masquerade = FALSE
 	activate_sound = 'code/modules/wod13/sounds/celerity_activate.ogg'
 	leveldelay = TRUE
@@ -340,7 +449,7 @@
 
 /obj/effect/celerity/Initialize()
 	. = ..()
-	spawn(5)
+	spawn(0.5 SECONDS)
 		qdel(src)
 
 /mob/living/carbon/human/Move(atom/newloc, direct, glide_size_override)
@@ -369,14 +478,26 @@
 /datum/movespeed_modifier/celerity5
 	multiplicative_slowdown = -1.5
 
+/datum/movespeed_modifier/temporis5
+	multiplicative_slowdown = -2.5
+
 /datum/movespeed_modifier/wing
 	multiplicative_slowdown = -0.25
 
 /datum/movespeed_modifier/dominate
 	multiplicative_slowdown = 5
 
+/datum/movespeed_modifier/temporis
+	multiplicative_slowdown = 7.5
+
 /datum/discipline/celerity/activate(mob/living/target, mob/living/carbon/human/caster)
 	. = ..()
+	if (caster.temporis_visual || caster.temporis_blur) //sorry guys, no using two time powers at once
+		to_chat(caster, "<span class='userdanger'>Your active Temporis causes Celerity to wrench your body's temporal field apart!</span>")
+		caster.emote("scream")
+		spawn(3 SECONDS)
+			caster.gib()
+		return
 	switch(level_casting)
 		if(1)
 			caster.add_movespeed_modifier(/datum/movespeed_modifier/celerity)
@@ -425,7 +546,7 @@
 	icon_state = "dominate"
 	cost = 1
 	ranged = TRUE
-	delay = 150
+	delay = 15 SECONDS
 	activate_sound = 'code/modules/wod13/sounds/dominate.ogg'
 	fearless = TRUE
 
@@ -433,12 +554,16 @@
 	. = ..()
 	if(target.spell_immunity)
 		return
-	if (caster.generation > target.generation) //fail if used on a lower generation
-		return
 	var/mypower = caster.social + caster.additional_social
 	var/theirpower = target.mentality + target.additional_mentality
-	if(theirpower >= mypower)
-		to_chat(caster, "<span class='warning'>[target] is too powerful for you!</span>")
+	var/dominate_me = FALSE
+	if(ishuman(target))
+		var/mob/living/carbon/human/H = target
+		if(H.clane)
+			if(H.clane.name == "Gargoyle")
+				dominate_me = TRUE
+	if(((theirpower >= mypower) || (caster.generation > target.generation)) && !dominate_me)
+		to_chat(caster, "<span class='warning'>[target]'s mind is too powerful to dominate!</span>")
 		return
 	if(HAS_TRAIT(caster, TRAIT_MUTE))
 		to_chat(caster, "<span class='warning'>You find yourself unable to speak!</span>")
@@ -489,7 +614,7 @@
 				var/datum/cb = CALLBACK(TRGT,/mob/living/carbon/human/proc/attack_myself_command)
 				for(var/i in 1 to 20)
 					addtimer(cb, (i - 1)*15)
-	spawn(20)
+	spawn(2 SECONDS)
 		if(TRGT)
 			TRGT.remove_overlay(MUTATIONS_LAYER)
 
@@ -499,7 +624,7 @@
 	icon_state = "dementation"
 	cost = 2
 	ranged = TRUE
-	delay = 100
+	delay = 10 SECONDS
 	activate_sound = 'code/modules/wod13/sounds/insanity.ogg'
 	clane_restricted = TRUE
 
@@ -550,7 +675,7 @@
 				initial_matrix = matrix(M.transform)
 				initial_matrix.Translate(-3,0)
 				animate(M, transform = initial_matrix, time = 1, loop = 0)
-		sleep(1)
+		sleep(0.1 SECONDS)
 	M.lying_fix()
 	M.dancing = FALSE
 
@@ -589,7 +714,7 @@
 				initial_matrix = matrix(M.transform)
 				initial_matrix.Translate(-3,0)
 				animate(M, transform = initial_matrix, time = 1, loop = 0)
-		sleep(1)
+		sleep(0.1 SECONDS)
 	M.lying_fix()
 	M.dancing = FALSE
 
@@ -602,10 +727,10 @@
 	//5 - victim starts to attack themself
 	if(target.spell_immunity)
 		return
-	var/mypower = 13-caster.generation+caster.social+caster.additional_mentality
-	var/theirpower = 13-target.generation+target.mentality+target.additional_mentality
-	if(theirpower > mypower)
-		to_chat(caster, "<span class='warning'>[target] is too powerful for you!</span>")
+	var/mypower = caster.social + caster.additional_social
+	var/theirpower = target.mentality + target.additional_mentality
+	if(theirpower >= mypower)
+		to_chat(caster, "<span class='warning'>[target]'s mind is too powerful to corrupt!</span>")
 		return
 	if(!ishuman(target))
 		to_chat(caster, "<span class='warning'>[target] doesn't have enough mind to get affected by this discipline!</span>")
@@ -630,7 +755,7 @@
 			new /datum/hallucination/oh_yeah(H, TRUE)
 		if(3)
 			H.Immobilize(20)
-			if(H.stat <= 2 && !H.IsSleeping() && !H.IsUnconscious() && !H.IsParalyzed() && !H.IsKnockdown() && !HAS_TRAIT(H, TRAIT_RESTRAINED))
+			if(H.stat <= HARD_CRIT && !H.IsSleeping() && !H.IsUnconscious() && !H.IsParalyzed() && !H.IsKnockdown() && !HAS_TRAIT(H, TRAIT_RESTRAINED))
 				if(prob(50))
 					dancefirst(H)
 				else
@@ -652,7 +777,7 @@
 	icon_state = "potence"
 	cost = 1
 	ranged = FALSE
-	delay = 100
+	delay = 10 SECONDS
 	activate_sound = 'code/modules/wod13/sounds/potence_activate.ogg'
 	var/datum/component/tackler
 
@@ -689,7 +814,7 @@
 	icon_state = "fortitude"
 	cost = 1
 	ranged = FALSE
-	delay = 100
+	delay = 7.5 SECONDS
 	activate_sound = 'code/modules/wod13/sounds/fortitude_activate.ogg'
 
 /datum/discipline/fortitude/activate(mob/living/target, mob/living/carbon/human/caster)
@@ -715,7 +840,7 @@
 	icon_state = "obfuscate"
 	cost = 1
 	ranged = FALSE
-	delay = 100
+	delay = 10 SECONDS
 	activate_sound = 'code/modules/wod13/sounds/obfuscate_activate.ogg'
 	leveldelay = TRUE
 
@@ -739,7 +864,7 @@
 	icon_state = "presence"
 	cost = 1
 	ranged = TRUE
-	delay = 50
+	delay = 5 SECONDS
 	activate_sound = 'code/modules/wod13/sounds/presence_activate.ogg'
 	leveldelay = FALSE
 	fearless = TRUE
@@ -773,10 +898,10 @@
 
 /datum/discipline/presence/activate(mob/living/target, mob/living/carbon/human/caster)
 	. = ..()
-	var/mypower = 13-caster.generation+caster.social+caster.additional_mentality
-	var/theirpower = 13-target.generation+target.mentality+target.additional_mentality
-	if(theirpower > mypower)
-		to_chat(caster, "<span class='warning'>[target] is too powerful for you!</span>")
+	var/mypower = caster.social + caster.additional_social
+	var/theirpower = target.mentality + target.additional_mentality
+	if((theirpower >= mypower) || ((caster.generation - 3) >= target.generation))
+		to_chat(caster, "<span class='warning'>[target]'s mind is too powerful to sway!</span>")
 		return
 	if(ishuman(target))
 		var/mob/living/carbon/human/H = target
@@ -827,7 +952,7 @@
 				for(var/obj/item/clothing/W in H.contents)
 					if(W)
 						H.dropItemToGround(W, TRUE)
-		spawn(delay+caster.discipline_time_plus)
+		spawn(delay + caster.discipline_time_plus)
 			if(H)
 				H.remove_overlay(MUTATIONS_LAYER)
 				if(caster)
@@ -839,7 +964,7 @@
 	icon_state = "protean"
 	cost = 1
 	ranged = FALSE
-	delay = 200
+	delay = 20 SECONDS
 	violates_masquerade = TRUE
 	activate_sound = 'code/modules/wod13/sounds/protean_activate.ogg'
 	clane_restricted = TRUE
@@ -961,8 +1086,8 @@
 			spawn(delay+caster.discipline_time_plus)
 				if(caster && caster.stat != DEAD)
 					GA.Restore(GA.myshape)
-					caster.Stun(15)
-					caster.do_jitter_animation(30)
+					caster.Stun(1 SECONDS)
+					caster.do_jitter_animation(1.5 SECONDS)
 //					if(caster.dna)
 					caster.playsound_local(caster, 'code/modules/wod13/sounds/protean_deactivate.ogg', 50, FALSE)
 //						caster.dna.species.attack_verb = initial(caster.dna.species.attack_verb)
@@ -976,11 +1101,11 @@
 //						caster.remove_overlay(PROTEAN_LAYER)
 
 /mob/living/proc/tremere_gib()
-	Stun(50)
+	Stun(5 SECONDS)
 	new /obj/effect/temp_visual/tremere(loc, "gib")
 	animate(src, pixel_y = 16, color = "#ff0000", time = 50, loop = 1)
 
-	spawn(50)
+	spawn(5 SECONDS)
 		if(stat != DEAD)
 			death()
 		var/list/items = list()
@@ -1030,27 +1155,38 @@
 		var/mob/living/carbon/human/VH = firer
 		if(isliving(target))
 			var/mob/living/VL = target
-			if(!iskindred(target))
+			if(isgarou(VL))
 				if(VL.bloodpool >= 1 && VL.stat != DEAD)
 					var/sucked = min(VL.bloodpool, 2)
 					VL.bloodpool = VL.bloodpool-sucked
-					VL.blood_volume = max(VL.blood_volume-50, 0)
+					VL.blood_volume = max(VL.blood_volume-50, 0) // average blood_volume of most carbons seems to be 560
+					VL.apply_damage(45, BURN)
+					VL.visible_message("<span class='danger'>[target]'s wounds spray boiling hot blood!</span>", "<span class='userdanger'>Your blood boils!</span>")
+					VL.add_splatter_floor(get_turf(target))
+					VL.add_splatter_floor(get_turf(get_step(target, target.dir)))
+				if(!iskindred(target))
+					if(VL.bloodpool >= 1 && VL.stat != DEAD)
+						var/sucked = min(VL.bloodpool, 2)
+						VL.bloodpool = VL.bloodpool-sucked
+						VL.blood_volume = max(VL.blood_volume-50, 0)
 					if(ishuman(VL))
-						var/mob/living/carbon/human/VHL = VL
-						VHL.blood_volume = max(VHL.blood_volume-10*sucked, 0)
-						if(VL.bloodpool == 0)
-							VHL.blood_volume = 0
-							VL.death()
+						if(VL.bloodpool >= 1 && VL.stat != DEAD)
+							var/mob/living/carbon/human/VHL = VL
+							VHL.blood_volume = max(VHL.blood_volume-25, 0)
+							if(VL.bloodpool == 0)
+								VHL.blood_volume = 0
+								VL.death()
 //							if(isnpc(VL))
 //								AdjustHumanity(VH, -1, 3)
 					else
 						if(VL.bloodpool == 0)
 							VL.death()
-					VH.bloodpool = VH.bloodpool+(sucked*max(1, VL.bloodquality-1))
-					VH.bloodpool = min(VH.maxbloodpool, VH.bloodpool)
+					//VH.bloodpool = VH.bloodpool+(sucked*max(1, VL.bloodquality-1))
+					//VH.bloodpool = min(VH.maxbloodpool, VH.bloodpool)
 			else
 				if(VL.bloodpool >= 1)
 					var/sucked = min(VL.bloodpool, 1*level)
+					VL.bloodpool = VL.bloodpool-sucked
 					VH.bloodpool = VH.bloodpool+sucked
 					VH.bloodpool = min(VH.maxbloodpool, VH.bloodpool)
 
@@ -1060,7 +1196,7 @@
 	icon_state = "thaumaturgy"
 	cost = 1
 	ranged = TRUE
-	delay = 10
+	delay = 5 SECONDS
 	violates_masquerade = TRUE
 	activate_sound = 'code/modules/wod13/sounds/thaum.ogg'
 	clane_restricted = TRUE
@@ -1093,13 +1229,13 @@
 			H.fire(direct_target = target)
 		else
 			if(iscarbon(target))
-				target.Stun(30)
+				target.Stun(2.5 SECONDS)
 				target.visible_message("<span class='danger'>[target] throws up!</span>", "<span class='userdanger'>You throw up!</span>")
 				playsound(get_turf(target), 'code/modules/wod13/sounds/vomit.ogg', 75, TRUE)
 				target.add_splatter_floor(get_turf(target))
 				target.add_splatter_floor(get_turf(get_step(target, target.dir)))
 			else
-				caster.bloodpool = min(caster.maxbloodpool, caster.bloodpool+target.bloodpool)
+				caster.bloodpool = min(caster.maxbloodpool, caster.bloodpool + target.bloodpool)
 				if(!istype(target, /mob/living/simple_animal/hostile/megafauna))
 //				if(isnpc(target))
 //					AdjustHumanity(caster, -1, 0)
@@ -1194,18 +1330,24 @@
 
 /datum/discipline/vicissitude/activate(mob/living/target, mob/living/carbon/human/caster)
 	. = ..()
-	if(iswerewolf(target))
+	if(iswerewolf(target) || isgarou(target))
 		caster.playsound_local(caster.loc, 'code/modules/wod13/sounds/vicissitude.ogg', 50, TRUE)
-		caster.adjustFireLoss(50)		//abusers suffer
+		//caster.adjustFireLoss(35)		//abusers suffer no more
+		caster.Stun(20)
 		caster.emote("scream")
+		target.apply_damage(10*level_casting, BRUTE)
+		target.apply_damage(5*level_casting, CLONE)
+		target.visible_message("<span class='danger'>[target]'s skin writhes like worms, twisting and contorting!</span>", "<span class='userdanger'>Your flesh twists unnaturally!</span>")
+		target.Stun(30)
+		target.emote("scream")
 	if(ishuman(target))
 		var/mob/living/carbon/human/H = target
 		caster.playsound_local(target.loc, 'code/modules/wod13/sounds/vicissitude.ogg', 50, TRUE)
-		if(target.stat >= 2)
+		if(target.stat >= HARD_CRIT)
 			if(istype(target, /mob/living/carbon/human/npc))
 				var/mob/living/carbon/human/npc/NPC = target
 				NPC.last_attacker = null
-			if(!iskindred(target))
+			if(!iskindred(target) || !isgarou(target))
 				if(H.stat != DEAD)
 					H.death()
 				switch(level_casting)
@@ -1286,8 +1428,8 @@
 				var/obj/item/bodypart/B = H.get_bodypart(pick(BODY_ZONE_R_ARM, BODY_ZONE_L_ARM, BODY_ZONE_R_LEG, BODY_ZONE_L_LEG))
 				if(B)
 					B.drop_limb()
-	else
-		target.death()
+	//else
+		//target.death() - Removed until a better solution is found to not have insta-kills on player mobs, unsure of side effects for normal vicissitude use but call death above already so should be fine?
 
 /turf
 	var/silented = FALSE
@@ -1320,18 +1462,13 @@
 	switch(level_casting)
 		if(1)
 			for(var/mob/living/carbon/human/H in oviewers(7, caster))
-				ADD_TRAIT(H, TRAIT_MUTE, "quietus")
-				H.remove_overlay(MUTATIONS_LAYER)
-				var/mutable_appearance/quietus_overlay = mutable_appearance('code/modules/wod13/icons.dmi', "quietus", -MUTATIONS_LAYER)
-				H.overlays_standing[MUTATIONS_LAYER] = quietus_overlay
-				H.apply_overlay(MUTATIONS_LAYER)
+				ADD_TRAIT(H, TRAIT_DEAF, "quietus")
 				if(H.get_confusion() < 15)
 					var/diff = 15 - H.get_confusion()
 					H.add_confusion(min(15, diff))
 				spawn(50)
 					if(H)
-						REMOVE_TRAIT(H, TRAIT_MUTE, "quietus")
-						H.remove_overlay(MUTATIONS_LAYER)
+						REMOVE_TRAIT(H, TRAIT_DEAF, "quietus")
 		if(2)
 			caster.drop_all_held_items()
 			caster.put_in_active_hand(new /obj/item/melee/touch_attack/quietus(caster))
@@ -1484,7 +1621,8 @@
 				M.beastmaster = caster
 				target.gib()
 	else
-		target.apply_damage(10*level_casting, BRUTE, BODY_ZONE_CHEST)
+		target.apply_damage(5 * level_casting, BRUTE, caster.zone_selected)
+		target.apply_damage(6 * level_casting, CLONE, caster.zone_selected)
 		target.emote("scream")
 
 /datum/discipline/obtenebration
@@ -1587,20 +1725,16 @@
 			to_chat(caster, "<b>[target]</b> has <b>[target.bloodpool]/[target.maxbloodpool]</b> blood points.")
 			to_chat(caster, "<b>[target]</b> has a rating of <b>[target.humanity]</b> on their path.")
 		if(2)
-			if(caster.grab_state > GRAB_PASSIVE)
-				if(ishuman(caster.pulling))
-					var/mob/living/PB = caster.pulling
-					if(isgarou(PB))
-						return
-					if(iskindred(PB))
-						PB.add_confusion(2)
-						PB.drowsyness += 2
-					else if(ishuman(PB))
-						PB.SetSleeping(300)
-				else
+			if(get_dist(caster, target) <= 2)
+				if(isgarou(target))
 					return
+				if(iskindred(target))
+					target.add_confusion(5)
+					target.drowsyness += 4
+				else if(ishuman(target))
+					target.SetSleeping(300)
 			else
-				to_chat(caster, "You need to be grabbing someone to use this power.")
+				to_chat(caster, "You need to be close to use this power.")
 				return
 		if(3)
 			if(current_beam)
@@ -1616,7 +1750,6 @@
 			target.update_damage_overlays()
 			target.update_health_hud()
 		if(4)
-			ranged = FALSE
 			if(current_beam)
 				qdel(current_beam)
 			caster.Beam(target, icon_state="sm_arc", time = 50, maxdistance = 9, beam_type = /obj/effect/ebeam/medical)
@@ -1667,36 +1800,85 @@
 	. = ..()
 	switch(level_casting)
 		if(1)
-			var/new_say = input(caster, "What will your target hear?") as text|null
+			if (target.stat == DEAD)
+				//why? because of laziness, it sends messages to deadchat if you do that
+				to_chat(caster, "<span class='notice'>You can't use this on corpses.</span>")
+				return
+			var/new_say = input(caster, "What will your target say?") as null|text
 			if(new_say)
-				new /datum/hallucination/chat(target, TRUE, FALSE, new_say)
-				to_chat(caster, "You throw \"[new_say]\" at [target]'s ears.")
+				//prevent forceful emoting and whatnot
+				new_say = trim(copytext_char(sanitize(new_say), 1, MAX_MESSAGE_LEN))
+				if (findtext(new_say, "*"))
+					to_chat(caster, "<span class='danger'>You can't force others to perform emotes!</span>")
+					return
+
+				if(CHAT_FILTER_CHECK(new_say))
+					to_chat(caster, "<span class='warning'>That message contained a word prohibited in IC chat! Consider reviewing the server rules.\n<span replaceRegex='show_filtered_ic_chat'>\"[new_say]\"</span></span>")
+					SSblackbox.record_feedback("tally", "ic_blocked_words", 1, lowertext(config.ic_filter_regex.match))
+					return
+				target.say("[new_say]", forced = "melpominee 1")
+
+				var/base_difficulty = 5
+				var/difficulty_malus = 0
+				var/masked = FALSE
+				if (ishuman(target)) //apply a malus and different text if victim's mouth isn't visible, and a malus if they're already typing
+					var/mob/living/carbon/human/victim = target
+					if ((victim.wear_mask?.flags_inv & HIDEFACE) || (victim.head?.flags_inv & HIDEFACE))
+						masked = TRUE
+						base_difficulty += 2
+					if (victim.overlays_standing[SAY_LAYER]) //ugly way to check for if the victim is currently typing
+						base_difficulty += 2
+
+				for (var/mob/living/hearer in (view(7, target) - caster - target))
+					if (!hearer.client)
+						continue
+					difficulty_malus = 0
+					if (get_dist(hearer, target) > 3)
+						difficulty_malus += 1
+					if (storyteller_roll(hearer.mentality + hearer.additional_mentality, base_difficulty + difficulty_malus) == ROLL_SUCCESS)
+						if (masked)
+							to_chat(hearer, "<span class='warning'>[target.name]'s jaw isn't moving to match [target.p_their()] words.</span>")
+						else
+							to_chat(hearer, "<span class='warning'>[target.name]'s lips aren't moving to match [target.p_their()] words.</span>")
 		if(2)
-			var/new_say = input(caster, "What will your target say?") as text|null
-			if(new_say)
-				target.say("[new_say]")
+			target = input(caster, "Who will you project your voice to?") as null|mob in (GLOB.player_list - caster)
+			if(target)
+				var/input_message = input(caster, "What message will you project to them?") as null|text
+				if (input_message)
+					//sanitisation!
+					input_message = trim(copytext_char(sanitize(input_message), 1, MAX_MESSAGE_LEN))
+					if(CHAT_FILTER_CHECK(input_message))
+						to_chat(caster, "<span class='warning'>That message contained a word prohibited in IC chat! Consider reviewing the server rules.\n<span replaceRegex='show_filtered_ic_chat'>\"[input_message]\"</span></span>")
+						SSblackbox.record_feedback("tally", "ic_blocked_words", 1, lowertext(config.ic_filter_regex.match))
+						return
+
+					var/language = caster.get_selected_language()
+					var/message = caster.compose_message(caster, language, input_message, , list())
+					to_chat(target, "<span class='purple'><i>You hear someone's voice in your head...</i></span>")
+					target.Hear(message, target, language, input_message, , , )
+					to_chat(caster, "<span class='notice'>You project your voice to [target]'s ears.</span>")
 		if(3)
 			for(var/mob/living/carbon/human/HU in oviewers(7, caster))
 				if(HU)
 					HU.caster = caster
-					HU.create_walk_to(20)
+					HU.create_walk_to(2 SECONDS)
 					HU.remove_overlay(MUTATIONS_LAYER)
 					var/mutable_appearance/song_overlay = mutable_appearance('code/modules/wod13/icons.dmi', "song", -MUTATIONS_LAYER)
 					HU.overlays_standing[MUTATIONS_LAYER] = song_overlay
 					HU.apply_overlay(MUTATIONS_LAYER)
-					spawn(20)
+					spawn(2 SECONDS)
 						if(HU)
 							HU.remove_overlay(MUTATIONS_LAYER)
 		if(4)
 			playsound(caster.loc, 'code/modules/wod13/sounds/killscream.ogg', 100, FALSE)
 			for(var/mob/living/carbon/human/HU in oviewers(7, caster))
 				if(HU)
-					HU.Stun(20)
+					HU.Stun(2 SECONDS)
 					HU.remove_overlay(MUTATIONS_LAYER)
 					var/mutable_appearance/song_overlay = mutable_appearance('code/modules/wod13/icons.dmi', "song", -MUTATIONS_LAYER)
 					HU.overlays_standing[MUTATIONS_LAYER] = song_overlay
 					HU.apply_overlay(MUTATIONS_LAYER)
-					spawn(20)
+					spawn(2 SECONDS)
 						if(HU)
 							HU.remove_overlay(MUTATIONS_LAYER)
 		if(5)
@@ -1712,3 +1894,78 @@
 					spawn(20)
 						if(HU)
 							HU.remove_overlay(MUTATIONS_LAYER)
+
+
+
+/datum/discipline/temporis
+	name = "Temporis"
+	desc = "Temporis is a Discipline unique to the True Brujah. Supposedly a refinement of Celerity, Temporis grants the Cainite the ability to manipulate the flow of time itself."
+	icon_state = "temporis"
+	cost = 1
+	ranged = TRUE
+	delay = 50
+	violates_masquerade = FALSE
+	activate_sound = 'code/modules/wod13/sounds/temporis.ogg'
+	clane_restricted = TRUE
+	dead_restricted = FALSE
+	var/current_cycle = 0
+	var/datum/component/temporis_target
+
+#define TEMPORIS_ATTACK_SPEED_MODIFIER 0.25
+
+/obj/effect/temporis
+	name = "Za Warudo"
+	desc = "..."
+	anchored = 1
+
+/obj/effect/temporis/Initialize()
+	. = ..()
+	spawn(5)
+		qdel(src)
+
+
+/mob/living/carbon/human/Move(atom/newloc, direct, glide_size_override)
+	..()
+	if(temporis_visual)
+		var/obj/effect/temporis/T = new(loc)
+		T.name = name
+		T.appearance = appearance
+		T.dir = dir
+		animate(T, pixel_x = rand(-32,32), pixel_y = rand(-32,32), alpha = 255, time = 10)
+		if(CheckEyewitness(src, src, 7, FALSE))
+			AdjustMasquerade(-1)
+	else if(temporis_blur)
+		var/obj/effect/temporis/T = new(loc)
+		T.name = name
+		T.appearance = appearance
+		T.dir = dir
+		animate(T, pixel_x = rand(-32,32), pixel_y = rand(-32,32), alpha = 155, time = 5)
+		if(CheckEyewitness(src, src, 7, FALSE))
+			AdjustMasquerade(-1)
+
+/datum/discipline/temporis/activate(mob/living/target, mob/living/carbon/human/caster)
+	. = ..()
+	if (caster.celerity_visual) //no using two time powers at once
+		to_chat(caster, "<span class='userdanger'>You try to manipulate your temporal field, but Celerity causes it to slip out of your grasp!</span>")
+		caster.emote("scream")
+		spawn(3 SECONDS)
+			caster.gib()
+		return
+	switch(level_casting)
+		if(1)
+			to_chat(caster, "<b>[SScity_time.timeofnight]</b>")
+			caster.bloodpool = caster.bloodpool+1
+		if(2)
+			target.AddComponent(/datum/component/dejavu, rewinds = 4, interval = 2 SECONDS)
+		if(3)
+			to_chat(target, "<span class='userdanger'><b>Slow down.</b></span>")
+			target.add_movespeed_modifier(/datum/movespeed_modifier/temporis)
+			spawn(10 SECONDS)
+				if(target)
+					target.remove_movespeed_modifier(/datum/movespeed_modifier/temporis)
+		if(4)
+			to_chat(caster, "<b>Use the second Temporis button at the bottom of the screen to cast this level of Temporis.</b>")
+			caster.bloodpool = caster.bloodpool+1
+		if(5)
+			to_chat(caster, "<b>Use the third Temporis button at the bottom of the screen to cast this level of Temporis.</b>")
+			caster.bloodpool = caster.bloodpool+1

@@ -28,16 +28,16 @@
 			if(DICE_FAILURE)
 				enter_frenzymod()
 				if(iskindred(src))
-					addtimer(CALLBACK(src, .proc/exit_frenzymod), 100*H.clane.frenzymod)
+					addtimer(CALLBACK(src, PROC_REF(exit_frenzymod)), 100*H.clane.frenzymod)
 				else
-					addtimer(CALLBACK(src, .proc/exit_frenzymod), 100)
+					addtimer(CALLBACK(src, PROC_REF(exit_frenzymod)), 100)
 				frenzy_hardness = 1
 			if(DICE_CRIT_FAILURE)
 				enter_frenzymod()
 				if(iskindred(src))
-					addtimer(CALLBACK(src, .proc/exit_frenzymod), 200*H.clane.frenzymod)
+					addtimer(CALLBACK(src, PROC_REF(exit_frenzymod)), 200*H.clane.frenzymod)
 				else
-					addtimer(CALLBACK(src, .proc/exit_frenzymod), 200)
+					addtimer(CALLBACK(src, PROC_REF(exit_frenzymod)), 200)
 				frenzy_hardness = 1
 			if(DICE_CRIT_WIN)
 				frenzy_hardness = max(1, frenzy_hardness-1)
@@ -56,7 +56,7 @@
 	GLOB.frenzy_list -= src
 
 /mob/living/carbon/proc/CheckFrenzyMove()
-	if(stat >= 1)
+	if(stat >= SOFT_CRIT)
 		return TRUE
 	if(IsSleeping())
 		return TRUE
@@ -161,7 +161,7 @@
 	if(isturf(loc))
 		frenzy_target = get_frenzy_targets()
 		if(frenzy_target)
-			var/datum/cb = CALLBACK(src,.proc/frenzystep)
+			var/datum/cb = CALLBACK(src, PROC_REF(frenzystep))
 			var/reqsteps = SSfrenzypool.wait/total_multiplicative_slowdown()
 			for(var/i in 1 to reqsteps)
 				addtimer(cb, (i - 1)*total_multiplicative_slowdown())
@@ -174,22 +174,21 @@
 
 /datum/species/kindred/spec_life(mob/living/carbon/human/H)
 	. = ..()
-	if(H.clane)
-		if(H.clane.name == "Baali")
-			if(istype(get_area(H), /area/vtm/church))
-				if(prob(25))
-					to_chat(H, "<span class='warning'>You don't belong here!</span>")
-					H.adjustFireLoss(20)
-					H.adjust_fire_stacks(6)
-					H.IgniteMob()
+	if(H.clane?.name == "Baali")
+		if(istype(get_area(H), /area/vtm/church))
+			if(prob(25))
+				to_chat(H, "<span class='warning'>You don't belong here!</span>")
+				H.adjustFireLoss(20)
+				H.adjust_fire_stacks(6)
+				H.IgniteMob()
 	//FIRE FEAR
-	if(!H.antifrenzy)
+	if(!H.antifrenzy && !HAS_TRAIT(H, TRAIT_KNOCKEDOUT))
 		var/fearstack = 0
 		for(var/obj/effect/fire/F in GLOB.fires_list)
 			if(F)
 				if(get_dist(F, H) < 8 && F.z == H.z)
 					fearstack += F.stage
-		for(var/mob/living/carbon/human/U in viewers(7, src))
+		for(var/mob/living/carbon/human/U in viewers(7, H))
 			if(U.on_fire)
 				fearstack += 1
 
@@ -224,7 +223,7 @@
 			if(H.pulling)
 				if(ishuman(H.pulling))
 					var/mob/living/carbon/human/pull = H.pulling
-					if(pull.stat == 4)
+					if(pull.stat == DEAD)
 						var/obj/item/card/id/id_card = H.get_idcard(FALSE)
 						if(!istype(id_card, /obj/item/card/id/clinic) && !istype(id_card, /obj/item/card/id/police) && !istype(id_card, /obj/item/card/id/sheriff) && !istype(id_card, /obj/item/card/id/prince) && !istype(id_card, /obj/item/card/id/camarilla))
 							if(H.CheckEyewitness(H, H, 7, FALSE))
@@ -263,14 +262,21 @@
 		H.bloodpool = max(0, H.bloodpool-1)
 		to_chat(H, "<span class='warning'>Necromancy Vision reduces your blood points too sustain itself.</span>")
 
-	if(H.clane)
-		if(H.clane.name == "Tzimisce" || H.clane.name == "Old Clan Tzimisce")
-			var/datum/vampireclane/tzimisce/TZ = H.clane
-			if(TZ.heirl)
-				if(!(TZ.heirl in H.GetAllContents()))
-					if(prob(5))
-						to_chat(H, "<span class='warning'>You are missing your home soil...</span>")
-						H.bloodpool = max(0, H.bloodpool-1)
+	if(H.clane?.name == "Tzimisce" || H.clane?.name == "Old Clan Tzimisce")
+		var/datum/vampireclane/tzimisce/TZ = H.clane
+		if(TZ.heirl)
+			if(!(TZ.heirl in H.GetAllContents()))
+				if(prob(5))
+					to_chat(H, "<span class='warning'>You are missing your home soil...</span>")
+					H.bloodpool = max(0, H.bloodpool-1)
+	if(H.clane?.name == "Kiasyd")
+		var/datum/vampireclane/kiasyd/kiasyd = H.clane
+		for(var/obj/item/I in H.contents)
+			if(I?.is_iron)
+				if (COOLDOWN_FINISHED(kiasyd, cold_iron_frenzy))
+					COOLDOWN_START(kiasyd, cold_iron_frenzy, 10 SECONDS)
+					H.rollfrenzy()
+					to_chat(H, "<span class='warning'>[I] is <b>COLD IRON</b>!")
 
 /*
 	if(!H in GLOB.masquerade_breakers_list)
@@ -281,7 +287,7 @@
 			GLOB.masquerade_breakers_list -= H
 */
 
-	if(H.key && H.stat <= 3)
+	if(H.key && (H.stat <= HARD_CRIT))
 		var/datum/preferences/P = GLOB.preferences_datums[ckey(H.key)]
 		if(P)
 			if(P.humanity != H.humanity)
@@ -312,16 +318,16 @@
 			if(!H.antifrenzy)
 				if(P.humanity < 1)
 					H.enter_frenzymod()
-//					reset_shit(H)
+					to_chat(H, "<span class='userdanger'>You have lost control of the Beast within you, and it has taken your body. Be more [H.client.prefs.enlightenment ? "Enlightened" : "humane"] next time.</span>")
 					H.ghostize(FALSE)
 					P.reason_of_death = "Lost control to the Beast ([time2text(world.timeofday, "YYYY-MM-DD hh:mm:ss")])."
 
-	if(H.clane && !H.antifrenzy)
+	if(H.clane && !H.antifrenzy && !HAS_TRAIT(H, TRAIT_KNOCKEDOUT))
 		if(H.clane.name == "Banu Haqim")
 			if(H.mind)
 				if(H.mind.enslaved_to)
 					if(get_dist(H, H.mind.enslaved_to) > 10)
-						if(H.last_frenzy_check+400 <= world.time)
+						if((H.last_frenzy_check + 40 SECONDS) <= world.time)
 							to_chat(H, "<span class='warning'><b>As you are far from [H.mind.enslaved_to], you feel the desire to drink more vitae!<b></span>")
 							H.last_frenzy_check = world.time
 							H.rollfrenzy()
@@ -335,13 +341,13 @@
 //	for(var/obj/effect/decal/cleanable/blood/B in range(7, src))
 //		if(B.bloodiness)
 //			blood_fr += B
-	if(!H.antifrenzy)
+	if(!H.antifrenzy && !HAS_TRAIT(H, TRAIT_KNOCKEDOUT))
 		if(H.bloodpool <= 1 && !H.in_frenzy)
-			if(H.last_frenzy_check+400 <= world.time)
+			if((H.last_frenzy_check + 40 SECONDS) <= world.time)
 				H.last_frenzy_check = world.time
 				H.rollfrenzy()
 				if(H.clane)
-					if(H.clane.enlightement)
+					if(H.clane.enlightenment)
 						if(!H.CheckFrenzyMove())
 							H.AdjustHumanity(1, 10)
 //	if(length(blood_fr) >= 10 && !H.in_frenzy)

@@ -30,27 +30,27 @@
 		var/datum/action/cobra/C = new()
 		C.Grant(H)
 
-/obj/urn
+/obj/item/urn
 	name = "organ urn"
 	desc = "Stores some precious organs..."
 	icon = 'code/modules/wod13/icons.dmi'
 	icon_state = "urn"
-	plane = GAME_PLANE
-	layer = CAR_LAYER
+	is_magic = TRUE
 	var/mob/living/own
 
-/obj/urn/attackby(obj/item/I, mob/living/user, params)
+/obj/item/urn/attackby(obj/item/I, mob/living/user, params)
 	. = ..()
 	qdel(src)
 
-/obj/urn/attack_hand(mob/user)
+/obj/item/urn/attack_self(mob/user)
 	. = ..()
 	qdel(src)
 
-/obj/urn/Destroy()
+/obj/item/urn/Destroy()
 	. = ..()
 	if(own)
 		own.death()
+
 
 /datum/action/urn
 	name = "Make Urn"
@@ -58,7 +58,7 @@
 	button_icon_state = "urn"
 	check_flags = AB_CHECK_HANDS_BLOCKED|AB_CHECK_IMMOBILE|AB_CHECK_LYING|AB_CHECK_CONSCIOUS
 	vampiric = TRUE
-	var/obj/urn/urn
+	var/obj/item/urn/urn
 	var/cool_down = 0
 
 /datum/action/urn/Trigger()
@@ -97,6 +97,7 @@
 						heart.Insert(H)
 			urn.own = null
 			qdel(urn)
+			urn = null
 
 /datum/action/mummyfy
 	name = "Mummyfy"
@@ -115,7 +116,7 @@
 		G.AdjustMasquerade(-1)
 	abuse_fix = world.time
 	G.Stun(100)
-	G.petrify(100)
+	G.petrify(100, "Serpentis")
 
 /obj/effect/proc_holder/spell/targeted/shapeshift/cobra
 	name = "Cobra"

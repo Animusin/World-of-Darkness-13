@@ -528,19 +528,6 @@ GLOBAL_LIST(admin_objective_list) //Prefilled admin assignable objective list
 			return FALSE
 	return TRUE
 
-/datum/objective/spiral
-	name = "spiral"
-	explanation_text = "Protect Black Spiral totem and destroy all of other totems in city."
-
-/datum/objective/spiral/check_completion()
-	for(var/obj/structure/werewolf_totem/W in GLOB.totems)
-		if(W.tribe != "Black Spiral")
-			if(W.totem_health != 0)
-				return FALSE
-		else if(W.totem_health == 0)
-			return FALSE
-	return TRUE
-
 /datum/objective/nuclear
 	name = "nuclear"
 	explanation_text = "Destroy the station with a nuclear device."
@@ -956,7 +943,7 @@ GLOBAL_LIST_EMPTY(possible_items_special)
 		/datum/objective/capture,
 		/datum/objective/absorb,
 		/datum/objective/custom
-	),/proc/cmp_typepaths_asc)
+	), GLOBAL_PROC_REF(cmp_typepaths_asc))
 
 	for(var/T in allowed_types)
 		var/datum/objective/X = T

@@ -33,7 +33,7 @@
 			if(!M.client)
 				to_chat(user, "You need [M] attention to do that.")
 				return
-			if(M.stat >= 2)
+			if(M.stat >= HARD_CRIT)
 				var/datum/preferences/P = GLOB.preferences_datums[ckey(M.key)]
 //				var/extra = FALSE
 //				if(D.diablerist)
@@ -55,7 +55,7 @@
 			if(!M.client)
 				to_chat(user, "You need [M] attention to do that.")
 				return
-			if(M.stat >= 2)
+			if(M.stat >= HARD_CRIT)
 				var/datum/preferences/P = GLOB.preferences_datums[ckey(M.key)]
 //				var/extra = FALSE
 //				if(D.diablerist)
@@ -155,6 +155,7 @@
 	. = ..()
 	var/chosen_name = input(user, "Write the hunted or forgiven character name:", "Blood Hunt")  as text|null
 	if(chosen_name)
+		chosen_name = sanitize_name(chosen_name)
 		var/name_in_list = FALSE
 		for(var/mob/living/carbon/human/H in GLOB.player_list)
 			if(H)
@@ -203,8 +204,8 @@
 		var/mob/living/carbon/human/H = target
 		var/pathof = "Humanity"
 		if(H.clane)
-			if(H.clane.enlightement)
-				pathof = "Enlightement"
+			if(H.clane.enlightenment)
+				pathof = "Enlightenment"
 		to_chat(user, "<b>[pathof]: [H.humanity]</b>")
 
 /obj/item/quran/testuser

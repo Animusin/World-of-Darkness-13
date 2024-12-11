@@ -77,8 +77,7 @@ var/list/CMNoir = list(0.3,0.3,0.3,0,\
 	if(client && !aghosted)
 		animate(client, color = CMNoir, time = 30)
 		client.color = CMNoir
-		if(client.prefs.toggles & CHANNEL_AMBIENCE)
-			client << sound('sound/effects/ghost_ambient.ogg', 1, 5, CHANNEL_AMBIENCE, 10)
+//There was observer music here. It's gone now.
 
 /mob/dead/observer/Initialize()
 	set_invisibility(GLOB.observer_default_invisibility)
@@ -148,7 +147,7 @@ var/list/CMNoir = list(0.3,0.3,0.3,0,\
 	real_name = name
 
 //	if(!fun_verbs)
-//		remove_verb(src, /mob/dead/observer/verb/boo)
+//		remove_verb(src, TYPE_VERB_REF(/mob/dead/observer, boo))
 	remove_verb(src, /mob/dead/observer/verb/possess)
 
 	add_to_dead_mob_list()
@@ -188,7 +187,7 @@ var/list/CMNoir = list(0.3,0.3,0.3,0,\
 	var/old_color = color
 	color = "#960000"
 	animate(src, color = old_color, time = 10, flags = ANIMATION_PARALLEL)
-	addtimer(CALLBACK(src, /atom/proc/update_atom_colour), 10)
+	addtimer(CALLBACK(src, TYPE_PROC_REF(/atom, update_atom_colour)), 10)
 
 /mob/dead/observer/Destroy()
 	if(data_huds_on)
@@ -316,7 +315,6 @@ Works together with spawning an observer, noted above.
 		stop_sound_channel(CHANNEL_HEARTBEAT) //Stop heartbeat sounds because You Are A Ghost Now
 		var/mob/dead/observer/ghost = new(src)	// Transfer safety to observer spawning proc.
 		SStgui.on_transfer(src, ghost) // Transfer NanoUIs.
-		ghost.respawntimeofdeath = respawntimeofdeath
 		ghost.can_reenter_corpse = can_reenter_corpse
 		// [ChillRaccoon] - setting mob icons
 		ghost.icon = src.icon // [ChillRaccoon] - We should transfer mob visuals to the ghost
@@ -339,11 +337,6 @@ Works together with spawning an observer, noted above.
 			// to_chat(ghost.client, "Check rights - [check_rights_for(ghost.client, R_ADMIN)]")
 			ghost.sight = SEE_TURFS | SEE_MOBS | SEE_OBJS
 			ghost.movement_type = FLYING | PHASING | GROUND // [ChillRaccoon] - makes us available to go through dens objects [Lucifernix] - It was += that made aghosts unable to phase here.
-			ghost.stop_sound_channel(CHANNEL_AMBIENCE)
-		else
-			ghost.client.color = CMNoir // [ChillRaccoon] - noir screen effect
-			if(ghost.client.prefs.toggles & CHANNEL_AMBIENCE)
-				ghost.client << sound('sound/effects/ghost_ambient.ogg', 1, 5, CHANNEL_AMBIENCE, 10)
 
 		if(!can_reenter_corpse)	// Disassociates observer mind from the body mind
 			ghost.mind = null
@@ -740,7 +733,7 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 	return TRUE
 
 //this is a mob verb instead of atom for performance reasons
-//see /mob/verb/examinate() in mob.dm for more info
+//see TYPE_VERB_REF(/mob, examinate)() in mob.dm for more info
 //overridden here and in /mob/living for different point span classes and sanity checks
 /mob/dead/observer/pointed(atom/A as mob|obj|turf in view(client.view, src))
 	if(!..())

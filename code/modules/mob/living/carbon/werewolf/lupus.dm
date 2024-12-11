@@ -9,10 +9,12 @@
 	limb_destroyer = 1
 	has_limbs = 0
 //	dextrous = FALSE
-	melee_damage_lower = 20
-	melee_damage_upper = 20
-	health = 200
-	maxHealth = 200
+//	speed = -1.5     doesn't work on carbons
+//	var/move_delay_add = -1.5 // movement delay to add    also didn't work
+	melee_damage_lower = 15
+	melee_damage_upper = 35
+	health = 160
+	maxHealth = 160
 //	bodyparts = list(
 //		/obj/item/bodypart/chest,
 //		/obj/item/bodypart/head,
@@ -21,6 +23,10 @@
 //		/obj/item/bodypart/r_leg,
 //		/obj/item/bodypart/l_leg,
 //		)
+	var/hispo = FALSE
+
+/datum/movespeed_modifier/lupusform
+	multiplicative_slowdown = -0.85
 
 /mob/living/carbon/werewolf/lupus/update_icons()
 	cut_overlays()
@@ -34,13 +40,13 @@
 		icon_state = "[sprite_color]"
 
 	switch(getFireLoss()+getBruteLoss())
-		if(25 to 50)
+		if(25 to 75)
 			var/mutable_appearance/damage_overlay = mutable_appearance(icon, "damage1[laid_down ? "_rest" : ""]")
 			add_overlay(damage_overlay)
-		if(50 to 75)
+		if(75 to 150)
 			var/mutable_appearance/damage_overlay = mutable_appearance(icon, "damage2[laid_down ? "_rest" : ""]")
 			add_overlay(damage_overlay)
-		if(75 to INFINITY)
+		if(150 to INFINITY)
 			var/mutable_appearance/damage_overlay = mutable_appearance(icon, "damage3[laid_down ? "_rest" : ""]")
 			add_overlay(damage_overlay)
 
@@ -58,3 +64,8 @@
 /mob/living/carbon/werewolf/lupus/update_transform() //The old method of updating lying/standing was update_icons(). Aliens still expect that.
 	. = ..()
 	update_icons()
+
+/mob/living/carbon/werewolf/lupus/Life()
+	if(hispo)
+		CheckEyewitness(src, src, 7, FALSE)
+	..()

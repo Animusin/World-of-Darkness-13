@@ -209,6 +209,9 @@
 
 	var/dancing = FALSE
 
+	var/temporis_visual = FALSE
+	var/temporis_blur = FALSE
+
 	var/vampire_faction
 
 	var/frenzy_chance_boost = 10
@@ -270,3 +273,10 @@
 	var/istower = FALSE
 
 	var/total_contracted = 0
+
+	///Whether the mob currently has the JUMP button selected
+	var/prepared_to_jump = FALSE
+	///Allows Gargoyles to move through solid objects using Visceratika 5.
+	var/gargoyle_pass = FALSE
+	///If this mob can strip people from range with a delay of 0.1 seconds. Currently only activated by Mytherceria 2.
+	var/enhanced_strip = FALSE

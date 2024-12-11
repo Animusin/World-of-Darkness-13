@@ -99,6 +99,7 @@ There are several things that need to be remembered:
 //	update_body_parts_head_only()
 	remove_overlay(BODY_LAYER)
 	dna.species.handle_body(src)
+	/*
 	if(gender == MALE)
 		if(!given_penis)
 			var/obj/item/organ/replacement = new /obj/item/organ/penis()
@@ -110,6 +111,7 @@ There are several things that need to be remembered:
 		if(I)
 			I.Remove(src)
 			QDEL_NULL(I)
+	*/
 	..()
 
 /mob/living/carbon/human/update_fire()
@@ -333,7 +335,8 @@ There are several things that need to be remembered:
 
 	if(client && hud_used)
 		var/atom/movable/screen/inventory/inv = hud_used.inv_slots[TOBITSHIFT(ITEM_SLOT_SUITSTORE) + 1]
-		inv?.update_icon()
+		if (inv) //inv can be null when joining, causing runtimes
+			inv.update_icon()
 
 	if(s_store)
 		s_store.screen_loc = ui_sstore1
@@ -417,7 +420,7 @@ There are several things that need to be remembered:
 		inv.update_icon()
 
 		inv = hud_used.inv_slots[TOBITSHIFT(ITEM_SLOT_RPOCKET) + 1]
-		inv?.update_icon()
+		inv.update_icon()
 
 		if(l_store)
 			l_store.screen_loc = ui_storage1

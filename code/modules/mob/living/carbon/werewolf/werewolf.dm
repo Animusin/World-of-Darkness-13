@@ -31,14 +31,12 @@
 //	sight = SEE_MOBS
 	see_in_dark = 2
 	verb_say = "woofs"
-	density = TRUE
-	anchored = TRUE
 	rotate_on_lying = 0
 
 	movement_type = GROUND // [ChillRaccoon] - fucking flying werewolfes is a meme
 
-	bloodpool = 10
-	maxbloodpool = 10
+	bloodpool = 20
+	maxbloodpool = 20
 
 	var/move_delay_add = 0 // movement delay to add
 
@@ -55,9 +53,9 @@
 	butcher_results = list(/obj/item/food/meat/slab = 5)
 	layer = LARGE_MOB_LAYER
 	var/obj_damage = 30
-	var/wound_bonus = 30
-	var/bare_wound_bonus = 30
-	var/sharpness = 100
+	var/wound_bonus = 10
+	var/bare_wound_bonus = 25
+	var/sharpness = 50
 	var/armour_penetration = 100
 	var/melee_damage_type = BRUTE
 	var/list/damage_coeff = list(BRUTE = 1, BURN = 1, TOX = 1, CLONE = 1, STAMINA = 0, OXY = 1)
@@ -76,7 +74,7 @@
 
 	var/step_variable = 0
 
-	var/werewolf_armor = 0
+	var/werewolf_armor = 5
 
 	var/assigned_quirks = FALSE
 
@@ -188,10 +186,11 @@
 	possible_a_intents = list(INTENT_HELP, INTENT_DISARM, INTENT_GRAB, INTENT_HARM)
 	limb_destroyer = 1
 	hud_type = /datum/hud/werewolf
-	melee_damage_lower = 40
-	melee_damage_upper = 40
-	health = 200
-	maxHealth = 200
+	melee_damage_lower = 25
+	melee_damage_upper = 65
+	health = 300
+	maxHealth = 300
+//	speed = -1  doesn't work on carbons
 	var/obj/item/r_store = null
 	var/obj/item/l_store = null
 	var/pounce_cooldown = 0
@@ -207,7 +206,13 @@
 		/obj/item/bodypart/l_leg,
 		)
 
-	werewolf_armor = 25
+	werewolf_armor = 35
+
+/datum/movespeed_modifier/crinosform
+	multiplicative_slowdown = -0.25
+
+/datum/movespeed_modifier/silver_slowdown
+	multiplicative_slowdown = 0.3
 
 /mob/living/carbon/werewolf/crinos/Initialize()
 	. = ..()
@@ -218,6 +223,8 @@
 /mob/living/carbon/werewolf/lupus/Initialize()
 	. = ..()
 	AddComponent(/datum/component/footstep, FOOTSTEP_MOB_CLAW, 0.5, -11)
+	var/datum/action/gift/hispo/hispo = new()
+	hispo.Grant(src)
 
 /mob/living/carbon/werewolf/crinos/show_inv(mob/user)
 	user.set_machine(src)

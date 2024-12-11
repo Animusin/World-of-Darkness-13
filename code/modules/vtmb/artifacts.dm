@@ -29,6 +29,7 @@
 	icon = 'code/modules/wod13/items.dmi'
 	onflooricon = 'code/modules/wod13/onfloor.dmi'
 	w_class = WEIGHT_CLASS_SMALL
+	is_magic = TRUE
 	var/mob/living/owner
 	var/true_name = "artifact"
 	var/true_desc = "Debug"
@@ -186,6 +187,8 @@
 /obj/item/vtm_artifact/key_of_alamut/get_powers()
 	..()
 	var/mob/living/carbon/human/H = owner
+	if(H.dna.species.brutemod == 0.3)
+		return
 	if(H.dna)
 		H.dna.species.brutemod = H.dna.species.brutemod-0.2
 		H.dna.species.burnmod = H.dna.species.burnmod-0.2
@@ -193,6 +196,8 @@
 /obj/item/vtm_artifact/key_of_alamut/remove_powers()
 	..()
 	var/mob/living/carbon/human/H = owner
+	if(H.dna.species.brutemod == 0.5)
+		return
 	if(H.dna)
 		H.dna.species.brutemod = H.dna.species.brutemod+0.2
 		H.dna.species.burnmod = H.dna.species.burnmod+0.2

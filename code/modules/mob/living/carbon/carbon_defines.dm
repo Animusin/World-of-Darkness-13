@@ -115,7 +115,7 @@
 	var/jump_range = 1
 
 	var/last_gnosis_buff = 0
-	var/last_rage_penis = 0
+	var/last_rage_gain = 0
 	var/last_veil_restore = 0
 
 	var/list/overlays_standing[TOTAL_LAYERS]
@@ -140,12 +140,7 @@
 
 	var/list/beastmaster = list()
 
-	var/friend_name
-	var/enemy_name
-	var/lover_name
-	var/have_friend = FALSE
-	var/have_enemy = FALSE
-	var/have_lover = FALSE
+	var/datum/relationship/MyRelationships
 
 	var/inspired = FALSE
 

@@ -16,6 +16,8 @@
 	var/mob/living/carbon/human/master
 	var/changed_master = FALSE
 	var/last_vitae = 0
+	var/list/datum/discipline/disciplines = list()
+	selectable = TRUE
 
 /datum/action/ghoulinfo
 	name = "About Me"
@@ -100,12 +102,26 @@
 		dat += "<b>Lockpicking</b>: [host.lockpicking]<BR>"
 		dat += "<b>Athletics</b>: [host.athletics]<BR>"
 		dat += "<b>Cruelty</b>: [host.blood]<BR>"
-		if(host.friend_name)
-			dat += "<b>Friend: [host.friend_name]</b><BR>"
-		if(host.enemy_name)
-			dat += "<b>Enemy: [host.enemy_name]</b><BR>"
-		if(host.lover_name)
-			dat += "<b>Lover: [host.lover_name]</b><BR>"
+		if(host.Myself)
+			if(host.Myself.Friend)
+				if(host.Myself.Friend.owner)
+					dat += "<b>My friend's name is [host.Myself.Friend.owner.true_real_name].</b><BR>"
+					if(host.Myself.Friend.phone_number)
+						dat += "Their number is [host.Myself.Friend.phone_number].<BR>"
+					if(host.Myself.Friend.friend_text)
+						dat += "[host.Myself.Friend.friend_text]<BR>"
+			if(host.Myself.Enemy)
+				if(host.Myself.Enemy.owner)
+					dat += "<b>My nemesis is [host.Myself.Enemy.owner.true_real_name]!</b><BR>"
+					if(host.Myself.Enemy.enemy_text)
+						dat += "[host.Myself.Enemy.enemy_text]<BR>"
+			if(host.Myself.Lover)
+				if(host.Myself.Lover.owner)
+					dat += "<b>I'm in love with [host.Myself.Lover.owner.true_real_name].</b><BR>"
+					if(host.Myself.Lover.phone_number)
+						dat += "Their number is [host.Myself.Lover.phone_number].<BR>"
+					if(host.Myself.Lover.lover_text)
+						dat += "[host.Myself.Lover.lover_text]<BR>"
 		if(length(host.knowscontacts) > 0)
 			dat += "<b>I know some other of my kind in this city. Need to check my phone, there definetely should be:</b><BR>"
 			for(var/i in host.knowscontacts)
@@ -125,22 +141,21 @@
 	infor.Grant(C)
 	var/datum/action/blood_heal/bloodheal = new()
 	bloodheal.Grant(C)
-	var/datum/action/take_vitae/TV = new()
-	TV.Grant(C)
 	C.generation = 13
 	C.bloodpool = 10
 	C.maxbloodpool = 10
-	C.maxHealth = 100
-	C.health = 100
+	C.maxHealth = 200
+	C.health = 200
 
 /datum/species/ghoul/on_species_loss(mob/living/carbon/human/C, datum/species/new_species, pref_load)
 	. = ..()
-	for(var/datum/action/ghoulinfo/GI in C.actions)
-		qdel(GI)
-	for(var/datum/action/blood_heal/BH in C.actions)
-		qdel(BH)
-	for(var/datum/action/take_vitae/TV in C.actions)
-		qdel(TV)
+	for(var/datum/action/A in C.actions)
+		if(A)
+			if(A.vampiric)
+				A.Remove(C)
+	for(var/datum/action/ghoulinfo/infor in C.actions)
+		if(infor)
+			infor.Remove(C)
 
 /datum/action/take_vitae
 	name = "Take Vitae"
@@ -185,13 +200,32 @@
 	name = "Blood Heal"
 	desc = "Use vitae in your blood to heal your wounds."
 	button_icon_state = "bloodheal"
+	button_icon = 'code/modules/wod13/UI/actions.dmi'
+	background_icon_state = "discipline"
+	icon_icon = 'code/modules/wod13/UI/actions.dmi'
 	check_flags = AB_CHECK_HANDS_BLOCKED|AB_CHECK_IMMOBILE|AB_CHECK_LYING|AB_CHECK_CONSCIOUS
+	vampiric = TRUE
 	var/last_heal = 0
 	var/level = 1
 
+/datum/action/blood_heal/ApplyIcon(atom/movable/screen/movable/action_button/current_button, force = FALSE)
+	if(owner)
+		if(owner.client)
+			if(owner.client.prefs)
+				if(owner.client.prefs.old_discipline)
+					button_icon = 'code/modules/wod13/disciplines.dmi'
+					icon_icon = 'code/modules/wod13/disciplines.dmi'
+				else
+					button_icon = 'code/modules/wod13/UI/actions.dmi'
+					icon_icon = 'code/modules/wod13/UI/actions.dmi'
+	. = ..()
+
 /datum/action/blood_heal/Trigger()
 	if(istype(owner, /mob/living/carbon/human))
+		if (HAS_TRAIT(owner, TRAIT_TORPOR))
+			return
 		var/mob/living/carbon/human/H = owner
+		level = max(1, 13-H.generation)
 		if(HAS_TRAIT(H, TRAIT_COFFIN_THERAPY))
 			if(!istype(H.loc, /obj/structure/closet/crate/coffin))
 				to_chat(usr, "<span class='warning'>You need to be in a coffin to use that!</span>")
@@ -200,16 +234,43 @@
 			to_chat(owner, "<span class='warning'>You don't have enough <b>BLOOD</b> to do that!</span>")
 			SEND_SOUND(H, sound('code/modules/wod13/sounds/need_blood.ogg', 0, 0, 75))
 			return
-		if(last_heal+30 >= world.time)
+		if((last_heal + 30) >= world.time)
 			return
 		last_heal = world.time
 		H.bloodpool = max(0, H.bloodpool-1)
-		H.playsound_local(H, 'code/modules/wod13/sounds/bloodhealing.ogg', 50, FALSE)
-		H.adjustBruteLoss(-10*level, TRUE)
-		H.adjustFireLoss(-10*level, TRUE)
+		SEND_SOUND(H, sound('code/modules/wod13/sounds/bloodhealing.ogg', 0, 0, 50))
+		H.heal_overall_damage(15*min(4, level), 10*min(4, level), 20*min(4, level))
+		H.adjustBruteLoss(-15*min(4, level), TRUE)
+		H.adjustFireLoss(-10*min(4, level), TRUE)
+		H.adjustOxyLoss(-20*min(4, level), TRUE)
+		H.adjustToxLoss(-20*min(4, level), TRUE)
+		H.blood_volume = min(H.blood_volume + 56, 560)
+		button.color = "#970000"
+		animate(button, color = "#ffffff", time = 20, loop = 1)
 		if(length(H.all_wounds))
 			var/datum/wound/W = pick(H.all_wounds)
 			W.remove_wound()
+		if(length(H.all_wounds))
+			var/datum/wound/W = pick(H.all_wounds)
+			W.remove_wound()
+		if(length(H.all_wounds))
+			var/datum/wound/W = pick(H.all_wounds)
+			W.remove_wound()
+		if(length(H.all_wounds))
+			var/datum/wound/W = pick(H.all_wounds)
+			W.remove_wound()
+		if(length(H.all_wounds))
+			var/datum/wound/W = pick(H.all_wounds)
+			W.remove_wound()
+		H.adjustCloneLoss(-5, TRUE)
+		var/obj/item/organ/eyes/eyes = H.getorganslot(ORGAN_SLOT_EYES)
+		if(eyes)
+			H.adjust_blindness(-2)
+			H.adjust_blurriness(-2)
+			eyes.applyOrganDamage(-5)
+		var/obj/item/organ/brain/brain = H.getorganslot(ORGAN_SLOT_BRAIN)
+		if(brain)
+			brain.applyOrganDamage(-100)
 		H.update_damage_overlays()
 		H.update_health_hud()
 		H.update_blood_hud()
@@ -229,7 +290,7 @@
 			if(H.pulling)
 				if(ishuman(H.pulling))
 					var/mob/living/carbon/human/pull = H.pulling
-					if(pull.stat == 4)
+					if(pull.stat == DEAD)
 						var/obj/item/card/id/id_card = H.get_idcard(FALSE)
 						if(!istype(id_card, /obj/item/card/id/clinic) && !istype(id_card, /obj/item/card/id/police) && !istype(id_card, /obj/item/card/id/sheriff) && !istype(id_card, /obj/item/card/id/prince) && !istype(id_card, /obj/item/card/id/camarilla))
 							if(H.CheckEyewitness(H, H, 7, FALSE))
@@ -267,25 +328,11 @@
 	if(H.key && H.stat != DEAD)
 		var/datum/preferences/P = GLOB.preferences_datums[ckey(H.key)]
 		if(P)
-//			if(P.humanity != H.humanity)
-//				P.humanity = H.humanity
-//				P.save_preferences()
-//				P.save_character()
 			if(P.masquerade != H.masquerade)
 				P.masquerade = H.masquerade
 				P.save_preferences()
 				P.save_character()
-//			if(H.last_experience+600 <= world.time)
-//				var/addd = 5
-//				if(H.mind)
-//					if(!H.JOB)
-//						H.JOB = SSjob.GetJob(H.mind.assigned_role)
-//						if(H.JOB)
-//							addd = H.JOB.experience_addition
-//				P.exper = min(calculate_mob_max_exper(H), P.exper+addd+H.experience_plus)
-//				P.save_preferences()
-//				P.save_character()
-//				H.last_experience = world.time
+
 			if(H.humanity <= 2)
 				if(prob(5))
 					if(prob(50))
@@ -308,7 +355,7 @@
 			if(H.pulling)
 				if(ishuman(H.pulling))
 					var/mob/living/carbon/human/pull = H.pulling
-					if(pull.stat == 4)
+					if(pull.stat == DEAD)
 						var/obj/item/card/id/id_card = H.get_idcard(FALSE)
 						if(!istype(id_card, /obj/item/card/id/clinic) && !istype(id_card, /obj/item/card/id/police) && !istype(id_card, /obj/item/card/id/sheriff) && !istype(id_card, /obj/item/card/id/prince) && !istype(id_card, /obj/item/card/id/camarilla))
 							if(H.CheckEyewitness(H, H, 7, FALSE))
@@ -331,7 +378,7 @@
 							var/obj/item/card/id/id_card = H.get_idcard(FALSE)
 							if(!istype(id_card, /obj/item/card/id/police) && !istype(id_card, /obj/item/card/id/sheriff) && !istype(id_card, /obj/item/card/id/prince) && !istype(id_card, /obj/item/card/id/camarilla))
 								if(H.CheckEyewitness(H, H, 7, FALSE))
-									if(H.last_loot_check+50 <= world.time)
+									if((H.last_loot_check + 5 SECONDS) <= world.time)
 										H.last_loot_check = world.time
 										H.last_nonraid = world.time
 										H.killed_count = H.killed_count+1
@@ -343,33 +390,9 @@
 											else
 												SEND_SOUND(H, sound('code/modules/wod13/sounds/sus.ogg', 0, 0, 75))
 												to_chat(H, "<span class='userdanger'><b>SUSPICIOUS ACTION (equipment)</b></span>")
-	if(H.last_bloodpool_restore+600 <= world.time)
+	if((H.last_bloodpool_restore + 60 SECONDS) <= world.time)
 		H.last_bloodpool_restore = world.time
 		H.bloodpool = min(H.maxbloodpool, H.bloodpool+1)
-
-//	if(H.key && H.stat != DEAD)
-//		var/datum/preferences/P = GLOB.preferences_datums[ckey(H.key)]
-//		if(P)
-//			if(P.humanity != H.humanity)
-//				P.humanity = H.humanity
-//				P.save_preferences()
-//				P.save_character()
-//			if(H.last_experience+600 <= world.time)
-//				P.exper = min(calculate_mob_max_exper(H), P.exper+5+H.experience_plus)
-//				P.save_preferences()
-//				P.save_character()
-//				H.last_experience = world.time
-
-//			if(H.humanity <= 2)
-//				if(prob(5))
-//					if(prob(50))
-//						H.Stun(10)
-//						to_chat(H, "<span class='warning'>You stop in fear and remember your crimes against humanity...</span>")
-//						H.emote("cry")
-//					else
-//						to_chat(H, "<span class='warning'>You feel the rage rising as your last sins come to your head...</span>")
-//						H.drop_all_held_items()
-//						H.emote("scream")
 
 /datum/species/garou/spec_life(mob/living/carbon/human/H)
 	. = ..()
@@ -382,7 +405,7 @@
 			if(H.pulling)
 				if(ishuman(H.pulling))
 					var/mob/living/carbon/human/pull = H.pulling
-					if(pull.stat == 4)
+					if(pull.stat == DEAD)
 						var/obj/item/card/id/id_card = H.get_idcard(FALSE)
 						if(!istype(id_card, /obj/item/card/id/clinic) && !istype(id_card, /obj/item/card/id/police) && !istype(id_card, /obj/item/card/id/sheriff) && !istype(id_card, /obj/item/card/id/prince) && !istype(id_card, /obj/item/card/id/camarilla))
 							if(H.CheckEyewitness(H, H, 7, FALSE))
@@ -417,6 +440,26 @@
 											else
 												SEND_SOUND(H, sound('code/modules/wod13/sounds/sus.ogg', 0, 0, 75))
 												to_chat(H, "<span class='userdanger'><b>SUSPICIOUS ACTION (equipment)</b></span>")
-	if(H.last_bloodpool_restore+600 <= world.time)
+	if((H.last_bloodpool_restore + 60 SECONDS) <= world.time)
 		H.last_bloodpool_restore = world.time
 		H.bloodpool = min(H.maxbloodpool, H.bloodpool+1)
+	if(glabro)
+		if(H.CheckEyewitness(H, H, 7, FALSE))
+			H.adjust_veil(-1)
+
+/**
+ * Accesses a certain Discipline that a Ghoul has. Returns false if they don't.
+ *
+ * Arguments:
+ * * searched_discipline - Name or typepath of the Discipline being searched for.
+ */
+/datum/species/ghoul/proc/get_discipline(searched_discipline)
+	for(var/datum/discipline/discipline in disciplines)
+		if (ispath(searched_discipline, /datum/discipline))
+			if (istype(discipline, searched_discipline))
+				return discipline
+		else if (istext(searched_discipline))
+			if (discipline.name == searched_discipline)
+				return discipline
+
+	return FALSE

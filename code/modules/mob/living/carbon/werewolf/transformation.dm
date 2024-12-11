@@ -45,6 +45,20 @@
 		to_chat(trans, "You can't transform while in frenzy.")
 		return
 	trans.inspired = FALSE
+	if(ishuman(trans))
+		var/datum/species/garou/G = trans.dna.species
+		var/mob/living/carbon/human/H = trans
+		if(G.glabro)
+			H.remove_overlay(PROTEAN_LAYER)
+			G.punchdamagelow = G.punchdamagelow-15
+			G.punchdamagehigh = G.punchdamagehigh-15
+			H.physiology.armor.melee = H.physiology.armor.melee-15
+			H.physiology.armor.bullet = H.physiology.armor.bullet-15
+			var/matrix/M = matrix()
+			M.Scale(1)
+			H.transform = M
+			G.glabro = FALSE
+			H.update_icons()
 	switch(form)
 		if("Lupus")
 			if(iscrinos(trans))
@@ -95,6 +109,7 @@
 					lupus_form.mind = trans.mind
 					lupus_form.update_blood_hud()
 					transfer_damage(trans, lupus_form)
+					lupus_form.add_movespeed_modifier(/datum/movespeed_modifier/lupusform)
 					trans.forceMove(src)
 					transformating = FALSE
 					animate(trans, transform = null, color = "#FFFFFF", time = 1)
@@ -132,6 +147,7 @@
 					crinos_form.mind = trans.mind
 					crinos_form.update_blood_hud()
 					transfer_damage(trans, crinos_form)
+					crinos_form.add_movespeed_modifier(/datum/movespeed_modifier/crinosform)
 					trans.forceMove(src)
 					transformating = FALSE
 					animate(trans, transform = null, color = "#FFFFFF", time = 1)
@@ -169,6 +185,8 @@
 					human_form.mind = trans.mind
 					human_form.update_blood_hud()
 					transfer_damage(trans, human_form)
+					human_form.remove_movespeed_modifier(/datum/movespeed_modifier/crinosform)
+					human_form.remove_movespeed_modifier(/datum/movespeed_modifier/lupusform)
 					trans.forceMove(src)
 					transformating = FALSE
 					animate(trans, transform = null, color = "#FFFFFF", time = 1)

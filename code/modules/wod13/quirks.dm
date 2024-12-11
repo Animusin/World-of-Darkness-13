@@ -210,7 +210,7 @@ Dancer
 		return
 	last_acrobate = world.time
 
-	if(H.stat >= 1 || H.IsSleeping() || H.IsUnconscious() || H.IsParalyzed() || H.IsKnockdown() || H.IsStun() || HAS_TRAIT(H, TRAIT_RESTRAINED) || !isturf(H.loc))
+	if(H.stat >= SOFT_CRIT || H.IsSleeping() || H.IsUnconscious() || H.IsParalyzed() || H.IsKnockdown() || H.IsStun() || HAS_TRAIT(H, TRAIT_RESTRAINED) || !isturf(H.loc))
 		return
 
 	if(!isturf(owner.loc))
@@ -370,6 +370,13 @@ Dancer
 	var/last_added_humanity = 0
 
 /datum/action/dance/Trigger()
+	if(HAS_TRAIT(owner, TRAIT_INCAPACITATED))
+		to_chat(owner, "<span class='warning'>You're a little too close to being dead to get down!</span>")
+		return
+
+	if(HAS_TRAIT(owner, TRAIT_FLOORED))
+		to_chat(owner, "<span class='warning'>You got to get up before you get down!</span>")
+		return
 //	var/mob/living/carbon/H = owner
 	if(prob(50))
 		dancefirst(owner)
@@ -427,7 +434,7 @@ Dancer
 		L.transform = L.transform.Scale(1, SHORT)
 		L.transform = L.transform.Translate(0, 16*(SHORT-1)) //Makes sure you stand on the tile no matter the size - sand
 	attached_targets[target] = comsig_target
-	RegisterSignal(target, comsig, .proc/check_loss) //Second arg of the signal will be checked against the comsig_target.
+	RegisterSignal(target, comsig, PROC_REF(check_loss)) //Second arg of the signal will be checked against the comsig_target.
 
 /datum/element/dwarfism/proc/check_loss(mob/living/L, comsig_target)
 	if(attached_targets[L] == comsig_target)
@@ -466,7 +473,7 @@ Dancer
 	var/mob/living/carbon/human/L = target
 	L.transform = L.transform.Scale(81/100, 81/100)
 	attached_targets[target] = comsig_target
-	RegisterSignal(target, comsig, .proc/check_loss) //Second arg of the signal will be checked against the comsig_target.
+	RegisterSignal(target, comsig, PROC_REF(check_loss)) //Second arg of the signal will be checked against the comsig_target.
 
 /datum/element/children/proc/check_loss(mob/living/L, comsig_target)
 	if(attached_targets[L] == comsig_target)
@@ -498,11 +505,11 @@ Dancer
 
 /datum/quirk/foreign/add()
 	var/mob/living/carbon/H = quirk_holder
-	H.add_blocked_language(/datum/language/common)
+	H.add_blocked_language(/datum/language/english)
 
 /datum/quirk/foreign/remove()
 	var/mob/living/carbon/H = quirk_holder
-	H.remove_blocked_language(/datum/language/common)
+	H.remove_blocked_language(/datum/language/english)
 
 /datum/quirk/espanol
 	name = "Espanol"
@@ -511,7 +518,7 @@ Dancer
 
 /datum/quirk/espanol/add()
 	var/mob/living/carbon/H = quirk_holder
-	H.grant_language(/datum/language/uncommon)
+	H.grant_language(/datum/language/espanol)
 
 /datum/quirk/chinese
 	name = "Chinese"
@@ -520,7 +527,7 @@ Dancer
 
 /datum/quirk/chinese/add()
 	var/mob/living/carbon/H = quirk_holder
-	H.grant_language(/datum/language/draconic)
+	H.grant_language(/datum/language/chinese)
 
 /datum/quirk/russian
 	name = "Russian"
@@ -529,7 +536,7 @@ Dancer
 
 /datum/quirk/russian/add()
 	var/mob/living/carbon/H = quirk_holder
-	H.grant_language(/datum/language/moffic)
+	H.grant_language(/datum/language/russian)
 
 /datum/quirk/japanese
 	name = "Japanese"
@@ -547,7 +554,52 @@ Dancer
 
 /datum/quirk/italian/add()
 	var/mob/living/carbon/H = quirk_holder
-	H.grant_language(/datum/language/sylvan)
+	H.grant_language(/datum/language/italian)
+
+/datum/quirk/german
+	name = "German"
+	desc = "You know the German language, FUR DAR FATERLAND!"
+	value = 1
+
+/datum/quirk/german/add()
+	var/mob/living/carbon/H = quirk_holder
+	H.grant_language(/datum/language/german)
+
+/datum/quirk/latin
+	name = "Latin"
+	desc = "You know the ancient holy language OF THE ROMANS AND THE CLERGY!!"
+	value = 2
+
+/datum/quirk/latin/add()
+	var/mob/living/carbon/H = quirk_holder
+	H.grant_language(/datum/language/latin)
+
+/datum/quirk/hebrew
+	name = "Hebrew"
+	desc = "You know the language of the ancient Hebrews!"
+	value = 1
+
+/datum/quirk/hebrew/add()
+	var/mob/living/carbon/H = quirk_holder
+	H.grant_language(/datum/language/hebrew)
+
+/datum/quirk/french
+	name = "French"
+	desc = "You know the romantic language of the French."
+	value = 1
+
+/datum/quirk/french/add()
+	var/mob/living/carbon/H = quirk_holder
+	H.grant_language(/datum/language/french)
+
+/datum/quirk/arabic
+	name = "Arabic"
+	desc = "You know the melodic language of the Middle East."
+	value = 1
+
+/datum/quirk/arabic/add()
+	var/mob/living/carbon/H = quirk_holder
+	H.grant_language(/datum/language/arabic)
 
 /datum/quirk/consumption
 	name = "Consumption"
@@ -673,7 +725,7 @@ Dancer
 		L.transform = L.transform.Scale(1, TALL)
 		L.transform = L.transform.Translate(0, 16*(TALL-1)) //Makes sure you stand on the tile no matter the size - sand
 	attached_targets[target] = comsig_target
-	RegisterSignal(target, comsig, .proc/check_loss) //Second arg of the signal will be checked against the comsig_target.
+	RegisterSignal(target, comsig, PROC_REF(check_loss)) //Second arg of the signal will be checked against the comsig_target.
 
 /datum/element/giantism/proc/check_loss(mob/living/L, comsig_target)
 	if(attached_targets[L] == comsig_target)

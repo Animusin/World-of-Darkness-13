@@ -117,7 +117,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 		if(!addedbind)
 			notadded += kb
 	if(length(notadded))
-		addtimer(CALLBACK(src, .proc/announce_conflict, notadded), 5 SECONDS)
+		addtimer(CALLBACK(src, PROC_REF(announce_conflict), notadded), 5 SECONDS)
 
 /datum/preferences/proc/announce_conflict(list/notadded)
 	to_chat(parent, "<span class='userdanger'>KEYBINDING CONFLICT!!!\n\
@@ -189,6 +189,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	READ_FILE(S["parallax"], parallax)
 	READ_FILE(S["ambientocclusion"], ambientocclusion)
 	READ_FILE(S["auto_fit_viewport"], auto_fit_viewport)
+	READ_FILE(S["old_discipline"], old_discipline)
 	READ_FILE(S["widescreenpref"], widescreenpref)
 	READ_FILE(S["pixel_size"], pixel_size)
 	READ_FILE(S["scaling_method"], scaling_method)
@@ -237,6 +238,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	parallax		= sanitize_integer(parallax, PARALLAX_INSANE, PARALLAX_DISABLE, null)
 	ambientocclusion	= sanitize_integer(ambientocclusion, FALSE, TRUE, initial(ambientocclusion))
 	auto_fit_viewport	= sanitize_integer(auto_fit_viewport, FALSE, TRUE, initial(auto_fit_viewport))
+	old_discipline	= sanitize_integer(old_discipline, FALSE, TRUE, initial(old_discipline))
 	widescreenpref  = sanitize_integer(widescreenpref, FALSE, TRUE, initial(widescreenpref))
 	pixel_size		= sanitize_float(pixel_size, PIXEL_SCALING_AUTO, PIXEL_SCALING_3X, 0.5, initial(pixel_size))
 	scaling_method  = sanitize_text(scaling_method, initial(scaling_method))
@@ -312,6 +314,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	WRITE_FILE(S["parallax"], parallax)
 	WRITE_FILE(S["ambientocclusion"], ambientocclusion)
 	WRITE_FILE(S["auto_fit_viewport"], auto_fit_viewport)
+	WRITE_FILE(S["old_discipline"], old_discipline)
 	WRITE_FILE(S["widescreenpref"], widescreenpref)
 	WRITE_FILE(S["pixel_size"], pixel_size)
 	WRITE_FILE(S["scaling_method"], scaling_method)
@@ -375,14 +378,13 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	READ_FILE(S["werewolf_hair"], werewolf_hair)
 	READ_FILE(S["werewolf_hair_color"], werewolf_hair_color)
 	READ_FILE(S["werewolf_eye_color"], werewolf_eye_color)
-//	READ_FILE(S["werewolf_apparel"], werewolf_apparel)
 
 	//Character
 	READ_FILE(S["slotlocked"], slotlocked)
 	READ_FILE(S["diablerist"], diablerist)
 	READ_FILE(S["auspice_level"], auspice_level)
 	READ_FILE(S["humanity"], humanity)
-	READ_FILE(S["enlightement"], enlightement)
+	READ_FILE(S["enlightement"], enlightenment)
 	READ_FILE(S["exper"], exper)
 	READ_FILE(S["exper_plus"], exper_plus)
 	READ_FILE(S["true_experience"], true_experience)
@@ -402,13 +404,17 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	READ_FILE(S["discipline2type"], discipline2type)
 	READ_FILE(S["discipline3type"], discipline3type)
 	READ_FILE(S["discipline4type"], discipline4type)
+	READ_FILE(S["discipline_types"], discipline_types)
+	READ_FILE(S["discipline_levels"], discipline_levels)
 	READ_FILE(S["friend"], friend)
 	READ_FILE(S["enemy"], enemy)
 	READ_FILE(S["lover"], lover)
 	READ_FILE(S["ambitious"], ambitious)
 	READ_FILE(S["flavor_text"], flavor_text)
+	READ_FILE(S["friend_text"], friend_text)
+	READ_FILE(S["enemy_text"], enemy_text)
+	READ_FILE(S["lover_text"], lover_text)
 	READ_FILE(S["reason_of_death"], reason_of_death)
-//	READ_FILE(S["clane"], clane)
 	READ_FILE(S["generation"], generation)
 	READ_FILE(S["generation_bonus"], generation_bonus)
 	READ_FILE(S["masquerade"], masquerade)
@@ -433,6 +439,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	READ_FILE(S["backpack"], backpack)
 	READ_FILE(S["jumpsuit_style"], jumpsuit_style)
 	READ_FILE(S["uplink_loc"], uplink_spawn_loc)
+	READ_FILE(S["clane_accessory"], clane_accessory)
 	READ_FILE(S["playtime_reward_cloak"], playtime_reward_cloak)
 	READ_FILE(S["phobia"], phobia)
 	READ_FILE(S["randomise"],  randomise)
@@ -489,6 +496,10 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 //		var/newtype = GLOB.clanes_list["Brujah"]
 //		clane = new newtype()
 
+	//Prevent Wighting upon joining a round
+	if(humanity <= 0)
+		humanity = 1
+
 	for(var/custom_name_id in GLOB.preferences_custom_names)
 		var/namedata = GLOB.preferences_custom_names[custom_name_id]
 		custom_names[custom_name_id] = reject_bad_name(custom_names[custom_name_id],namedata["allow_numbers"])
@@ -522,7 +533,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	archetype 		= sanitize_inlist(archetype, subtypesof(/datum/archetype))
 
 	breed			= sanitize_inlist(breed, list("Homid", "Lupus", "Metis"))
-	tribe			= sanitize_inlist(tribe, list("Wendigo", "Glasswalkers"))
+	tribe			= sanitize_inlist(tribe, list("Wendigo", "Glasswalkers", "Black Spiral Dancers"))
 	werewolf_color	= sanitize_inlist(werewolf_color, list("black", "gray", "red", "white", "ginger", "brown"))
 	werewolf_scar	= sanitize_integer(werewolf_scar, 0, 7, initial(werewolf_scar))
 	werewolf_hair	= sanitize_integer(werewolf_hair, 0, 4, initial(werewolf_hair))
@@ -532,13 +543,15 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	socks			= sanitize_inlist(socks, GLOB.socks_list)
 	age				= sanitize_integer(age, AGE_MIN, AGE_MAX, initial(age))
 	diablerist				= sanitize_integer(diablerist, 0, 1, initial(diablerist))
-	flavor_text		= sanitize_text(flavor_text)
+	friend_text		= sanitize_text(friend_text)
+	enemy_text		= sanitize_text(enemy_text)
+	lover_text		= sanitize_text(lover_text)
 	reason_of_death	= sanitize_text(reason_of_death)
 	torpor_count				= sanitize_integer(torpor_count, 0, 6, initial(torpor_count))
 	total_age		= sanitize_integer(total_age, 18, 1120, initial(total_age))
 	slotlocked			= sanitize_integer(slotlocked, 0, 1, initial(slotlocked))
 	humanity				= sanitize_integer(humanity, 0, 10, initial(humanity))
-	enlightement				= sanitize_integer(enlightement, 0, 1, initial(enlightement))
+	enlightenment				= sanitize_integer(enlightenment, 0, 1, initial(enlightenment))
 	exper				= sanitize_integer(exper, 0, 99999999, initial(exper))
 	exper_plus				= sanitize_integer(exper_plus, 0, 99999999, initial(exper_plus))
 	true_experience				= sanitize_integer(true_experience, 0, 99999999, initial(true_experience))
@@ -559,6 +572,9 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	discipline3type				= sanitize_discipline(discipline3type, subtypesof(/datum/discipline))
 	if(discipline4type)
 		discipline4type				= sanitize_discipline(discipline4type, subtypesof(/datum/discipline))
+	discipline_types = sanitize_islist(discipline_types, list())
+	discipline_levels = sanitize_islist(discipline_levels, list())
+	//TODO: custom sanitization for discipline_types and discipline_levels
 	friend				= sanitize_integer(friend, 0, 1, initial(friend))
 	enemy				= sanitize_integer(enemy, 0, 1, initial(enemy))
 	lover				= sanitize_integer(lover, 0, 1, initial(lover))
@@ -574,6 +590,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	backpack			= sanitize_inlist(backpack, GLOB.backpacklist, initial(backpack))
 	jumpsuit_style	= sanitize_inlist(jumpsuit_style, GLOB.jumpsuitlist, initial(jumpsuit_style))
 	uplink_spawn_loc = sanitize_inlist(uplink_spawn_loc, GLOB.uplink_spawn_loc_list, initial(uplink_spawn_loc))
+	clane_accessory = sanitize_inlist(clane_accessory, clane.accessories, null)
 	playtime_reward_cloak = sanitize_integer(playtime_reward_cloak)
 	features["mcolor"]	= sanitize_hexcolor(features["mcolor"], 3, 0)
 	features["ethcolor"]	= copytext_char(features["ethcolor"], 1, 7)
@@ -601,6 +618,36 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	all_quirks = SANITIZE_LIST(all_quirks)
 	validate_quirks()
 
+	//Convert jank old Discipline system to new Discipline system
+	if ((istype(pref_species, /datum/species/kindred) || istype(pref_species, /datum/species/ghoul)) && !discipline_types.len)
+		if (discipline1type && discipline1level)
+			discipline_types += discipline1type
+			discipline_levels += discipline1level
+			discipline1type = null
+			discipline1level = null
+		if (discipline2type && discipline2level)
+			discipline_types += discipline2type
+			discipline_levels += discipline2level
+			discipline2type = null
+			discipline2level = null
+		if (discipline3type && discipline3level)
+			discipline_types += discipline3type
+			discipline_levels += discipline3level
+			discipline3type = null
+			discipline3level = null
+		if (discipline4type && discipline4level)
+			discipline_types += discipline4type
+			discipline_levels += discipline4level
+			discipline4type = null
+			discipline4level = null
+
+	//repair some damage done by an exploit by resetting
+	if ((true_experience > 1000) && !check_rights_for(parent, R_ADMIN))
+		message_admins("[ADMIN_LOOKUPFLW(parent)] loaded a character slot with [true_experience] experience. The slot has been reset.")
+		log_game("[key_name(parent)] loaded a character slot with [true_experience] experience. The slot has been reset.")
+		to_chat(parent, "<span class='userdanger'>You tried to load a character slot with [true_experience] experience. It has been reset.</span>")
+		reset_character()
+
 	return TRUE
 
 /datum/preferences/proc/save_character()
@@ -626,7 +673,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	WRITE_FILE(S["slotlocked"]			, slotlocked)
 	WRITE_FILE(S["diablerist"]			, diablerist)
 	WRITE_FILE(S["humanity"]			, humanity)
-	WRITE_FILE(S["enlightement"]			, enlightement)
+	WRITE_FILE(S["enlightement"]			, enlightenment)
 	WRITE_FILE(S["exper"]			, exper)
 	WRITE_FILE(S["exper_plus"]			, exper_plus)
 	WRITE_FILE(S["true_experience"]			, true_experience)
@@ -647,11 +694,16 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	WRITE_FILE(S["discipline2type"]			, discipline2type)
 	WRITE_FILE(S["discipline3type"]			, discipline3type)
 	WRITE_FILE(S["discipline4type"]			, discipline4type)
+	WRITE_FILE(S["discipline_types"], discipline_types)
+	WRITE_FILE(S["discipline_levels"], discipline_levels)
 	WRITE_FILE(S["friend"]			, friend)
 	WRITE_FILE(S["enemy"]			, enemy)
 	WRITE_FILE(S["lover"]			, lover)
 	WRITE_FILE(S["ambitious"]			, ambitious)
 	WRITE_FILE(S["flavor_text"]			, flavor_text)
+	WRITE_FILE(S["friend_text"]			, friend_text)
+	WRITE_FILE(S["enemy_text"]			, enemy_text)
+	WRITE_FILE(S["lover_text"]			, lover_text)
 	WRITE_FILE(S["reason_of_death"]			, reason_of_death)
 	WRITE_FILE(S["clane"]			, clane.name)
 	WRITE_FILE(S["generation"]			, generation)
@@ -678,6 +730,7 @@ SAVEFILE UPDATING/VERSIONING - 'Simplified', or rather, more coder-friendly ~Car
 	WRITE_FILE(S["backpack"]			, backpack)
 	WRITE_FILE(S["jumpsuit_style"]			, jumpsuit_style)
 	WRITE_FILE(S["uplink_loc"]			, uplink_spawn_loc)
+	WRITE_FILE(S["clane_accessory"]			, clane_accessory)
 	WRITE_FILE(S["playtime_reward_cloak"]			, playtime_reward_cloak)
 	WRITE_FILE(S["randomise"]		, randomise)
 	WRITE_FILE(S["species"]			, pref_species.id)

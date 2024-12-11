@@ -118,6 +118,7 @@
 	righthand_file = 'icons/mob/inhands/equipment/tools_righthand.dmi'
 	custom_materials = list(/datum/material/iron=150, /datum/material/glass=75)
 	breakouttime = 30 SECONDS
+	onflooricon = 'code/modules/wod13/onfloor.dmi'
 	cuffsound = 'sound/weapons/cablecuff.ogg'
 
 /obj/item/restraints/handcuffs/cable/red
@@ -299,7 +300,7 @@
 
 /obj/item/restraints/legcuffs/beartrap/energy/Initialize()
 	. = ..()
-	addtimer(CALLBACK(src, .proc/dissipate), 100)
+	addtimer(CALLBACK(src, PROC_REF(dissipate)), 100)
 
 /obj/item/restraints/legcuffs/beartrap/energy/proc/dissipate()
 	if(!ismob(loc))

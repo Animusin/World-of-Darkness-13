@@ -9,19 +9,21 @@
 	)
 	male_clothes = "/obj/item/clothing/under/vampire/emo"
 	female_clothes = "/obj/item/clothing/under/vampire/business"
-	enlightement = TRUE
+	enlightenment = TRUE
+	whitelisted = TRUE
 
 /datum/vampireclane/lasombra/post_gain(mob/living/carbon/human/H)
 	..()
 	var/obj/item/organ/eyes/night_vision/NV = new()
 	NV.Insert(H, TRUE, FALSE)
 	H.vis_flags |= VIS_HIDE
+	H.faction |= "Lasombra"
 
 /datum/discipline/obtenebration/post_gain(mob/living/carbon/human/H)
-	H.faction |= "Lasombra"
-	H.mysticism_knowledge = 1
-	var/datum/action/shadowcontrol/control = new()
-	control.Grant(H)
+	if(level >= 1)
+		var/datum/action/shadowcontrol/control = new()
+		control.Grant(H)
+		H.mysticism_knowledge = TRUE
 	if(level >= 3)
 		var/datum/action/lastentacles/tentacles = new()
 		tentacles.Grant(H)
@@ -63,7 +65,7 @@
 //	animate(H, color = "#000000", time = 10, loop = 1)
 	if(H.CheckEyewitness(H, H, 7, FALSE))
 		H.AdjustMasquerade(-1)
-	spawn(300)
+	spawn(20 SECONDS)
 		if(H)
 			playsound(H.loc, 'sound/magic/voidblink.ogg', 50, FALSE)
 			for(var/obj/item/melee/vampirearms/knife/gangrel/lasombra/G in H.contents)
@@ -83,7 +85,7 @@
 
 /datum/action/lasarmor/Trigger()
 	. = ..()
-	if(abuse_fix+100 > world.time)
+	if(abuse_fix+250 > world.time)
 		return
 	var/mob/living/carbon/human/H = owner
 	if(H.bloodpool < 2)
@@ -92,14 +94,14 @@
 	H.bloodpool = max(0, H.bloodpool-2)
 	playsound(H.loc, 'sound/magic/voidblink.ogg', 50, FALSE)
 	abuse_fix = world.time
-	H.physiology.damage_resistance += 75
+	H.physiology.damage_resistance += 60
 	animate(H, color = "#000000", time = 10, loop = 1)
 	if(H.CheckEyewitness(H, H, 7, FALSE))
 		H.AdjustMasquerade(-1)
-	spawn(400)
+	spawn(15 SECONDS)
 		if(H)
 			playsound(H.loc, 'sound/magic/voidblink.ogg', 50, FALSE)
-			H.physiology.damage_resistance -= 75
+			H.physiology.damage_resistance -= 60
 			H.color = initial(H.color)
 
 /datum/action/shadowcontrol
@@ -112,7 +114,7 @@
 
 /datum/action/shadowcontrol/Trigger()
 	. = ..()
-	if(abuse_fix+100 > world.time)
+	if((abuse_fix + 10 SECONDS) > world.time)
 		return
 	var/mob/living/carbon/human/H = owner
 	if(H.bloodpool < 1)

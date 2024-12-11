@@ -29,6 +29,7 @@
 #define COMSIG_KB_CLIENT_GETHELP_DOWN "keybinding_client_gethelp_down"
 #define COMSIG_KB_CLIENT_SCREENSHOT_DOWN "keybinding_client_screenshot_down"
 #define COMSIG_KB_CLIENT_MINIMALHUD_DOWN "keybinding_client_minimalhud_down"
+#define COMSIG_KB_CLIENT_FULLSCREEN_DOWN "keybinding_client_fullscreen_down"
 
 //Communication
 #define COMSIG_KB_CLIENT_OOC_DOWN "keybinding_client_ooc_down"
@@ -40,6 +41,7 @@
 #define COMSIG_KB_HUMAN_QUICKEQUIPBELT_DOWN "keybinding_human_quickequipbelt_down"
 #define COMSIG_KB_HUMAN_BAGEQUIP_DOWN "keybinding_human_bagequip_down"
 #define COMSIG_KB_HUMAN_SUITEQUIP_DOWN "keybinding_human_suitequip_down"
+#define COMSIG_KB_HUMAN_BITE_DOWN "keybinding_human_bite_down"
 
 //Living
 #define COMSIG_KB_LIVING_RESIST_DOWN "keybinding_living_resist_down"

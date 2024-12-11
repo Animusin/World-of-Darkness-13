@@ -20,66 +20,10 @@
 		R.announce_crime("murder", get_turf(src))
 	GLOB.masquerade_breakers_list -= src
 	GLOB.sabbatites -= src
-//	var/allowed_to_loose = FALSE
-/*	if(key)
-		var/special_role_name
-		if(mind)
-			if(mind.special_role)
-				var/datum/antagonist/A = mind.special_role
-				special_role_name = A.name
-			if(!mind.special_role || special_role_name == "Ambitious")
-				allowed_to_loose = TRUE
-	if(!roundstart_vampire)
-		allowed_to_loose = FALSE
-	if(died_already)
-		allowed_to_loose = FALSE
-	if(!GLOB.canon_event)
-		allowed_to_loose = FALSE
-	if(allowed_to_loose)
-		died_already = TRUE
-		var/datum/preferences/P = GLOB.preferences_datums[ckey(key)]
-		if(P)
-			var/max_death = 6
-			if(P.generation == 11)
-				max_death = 5
-			if(P.generation == 10)
-				max_death = 4
-			if(P.generation == 9)
-				max_death = 3
-			if(P.generation == 8)
-				max_death = 2
-			if(P.generation == 7)
-				max_death = 2
-			if(P.generation <= 6)
-				max_death = 1
-			if(P.last_torpor+60 < world.time)
-				P.last_torpor = world.time
-				P.torpor_count = P.torpor_count+1
-				if(P.torpor_count >= max_death)
-					P.torpor_count = 0
-					if(!HAS_TRAIT(src, TRAIT_PHOENIX))
-//					P.exper = 0
-						P.discipline1level = max(1, P.discipline1level-1)
-						P.discipline2level = max(1, P.discipline2level-1)
-						P.discipline3level = max(1, P.discipline3level-1)
-						P.discipline4level = max(1, P.discipline4level-1)
-						P.physique = max(2, P.physique-1)
-						P.social = max(2, P.social-1)
-						P.mentality = max(2, P.mentality-1)
-//						if(isghoul(src))
-//							P.exper = 0
-					generation = min(13, generation+1)
-					P.generation = generation
-				P.humanity = humanity
-				P.masquerade = masquerade
-				P.save_character()
-				P.save_preferences()
-				P.reason_of_death = "Killed in action ([time2text(world.timeofday, "YYYY-MM-DD hh:mm:ss")])."*/
+
 	if(iskindred(src))
 		if(in_frenzy)
 			exit_frenzymod()
-//		fire_stacks += 5
-//		IgniteMob()
 		playsound(src, 'code/modules/wod13/sounds/burning_death.ogg', 80, TRUE)
 		SEND_SOUND(src, sound('code/modules/wod13/sounds/final_death.ogg', 0, 0, 50))
 		lying_fix()
@@ -216,9 +160,35 @@
 
 //(source.pulledby && source.pulledby.grab_state > GRAB_PASSIVE)
 
+/atom/movable/screen/jump
+	name = "jump"
+	icon = 'code/modules/wod13/UI/buttons_wide.dmi'
+	icon_state = "act_jump_off"
+	layer = HUD_LAYER
+	plane = HUD_PLANE
+
+/atom/movable/screen/jump/Click()
+	var/mob/living/L = usr
+	if(!L.prepared_to_jump)
+		L.prepared_to_jump = TRUE
+		icon_state = "act_jump_on"
+		to_chat(usr, "<span class='notice'>You prepare to jump.</span>")
+	else
+		L.prepared_to_jump = FALSE
+		icon_state = "act_jump_off"
+		to_chat(usr, "<span class='notice'>You are not prepared to jump anymore.</span>")
+	..()
+
+/atom/Click()
+	. = ..()
+	if(isliving(usr) && usr != src)
+		var/mob/living/L = usr
+		if(L.prepared_to_jump)
+			L.jump(src)
+
 /atom/movable/screen/block
 	name = "block"
-	icon = 'code/modules/wod13/icons.dmi'
+	icon = 'code/modules/wod13/UI/buttons_wide.dmi'
 	icon_state = "act_block_off"
 	layer = HUD_LAYER
 	plane = HUD_PLANE
@@ -239,7 +209,7 @@
 
 /atom/movable/screen/blood
 	name = "bloodpool"
-	icon = 'code/modules/wod13/vamphud.dmi'
+	icon = 'code/modules/wod13/UI/bloodpool.dmi'
 	icon_state = "blood0"
 	layer = HUD_LAYER
 	plane = HUD_PLANE
@@ -266,7 +236,7 @@
 	plane = HUD_PLANE
 
 /atom/movable/screen/drinkblood/Click()
-	SEND_SOUND(usr, sound('code/modules/wod13/sounds/highlight.ogg', 0, 0, 50))
+//	SEND_SOUND(usr, sound('code/modules/wod13/sounds/highlight.ogg', 0, 0, 50))
 	if(ishuman(usr))
 		var/mob/living/carbon/human/BD = usr
 		BD.update_blood_hud()
@@ -282,7 +252,16 @@
 		if(BD.grab_state > GRAB_PASSIVE)
 			if(ishuman(BD.pulling))
 				var/mob/living/carbon/human/PB = BD.pulling
-				if(PB.stat == 4 && !HAS_TRAIT(BD, TRAIT_GULLET))
+				if(isghoul(usr))
+					if(!iskindred(PB))
+						SEND_SOUND(BD, sound('code/modules/wod13/sounds/need_blood.ogg', 0, 0, 75))
+						to_chat(BD, "<span class='warning'>Eww, that is <b>GROSS</b>.</span>")
+						return
+				if(!isghoul(usr) && !iskindred(usr))
+					SEND_SOUND(BD, sound('code/modules/wod13/sounds/need_blood.ogg', 0, 0, 75))
+					to_chat(BD, "<span class='warning'>Eww, that is <b>GROSS</b>.</span>")
+					return
+				if(PB.stat == DEAD && !HAS_TRAIT(BD, TRAIT_GULLET))
 					SEND_SOUND(BD, sound('code/modules/wod13/sounds/need_blood.ogg', 0, 0, 75))
 					to_chat(BD, "<span class='warning'>This creature is <b>DEAD</b>.</span>")
 					return
@@ -293,9 +272,14 @@
 				if(BD.clane)
 					var/special_clan = FALSE
 					if(BD.clane.name == "Salubri")
-						if(!PB.IsSleeping())
+						if(PB.client)
+							if(alert(PB, "Do you consent to being fed on by [BD.name]?", "Consent To Feeding", "Yes", "No") != "Yes")
+								to_chat(BD, "<span class='warning'>You cannot feed on people who do not consent.</span>")
+								return
+						else if(!PB.IsSleeping())
 							to_chat(BD, "<span class='warning'>You can't drink from aware targets!</span>")
 							return
+
 						special_clan = TRUE
 						PB.emote("moan")
 					if(BD.clane.name == "Giovanni")
@@ -305,12 +289,16 @@
 						PB.emote("groan")
 				PB.add_bite_animation()
 			if(isliving(BD.pulling))
+				if (!iskindred(BD))
+					SEND_SOUND(BD, sound('code/modules/wod13/sounds/need_blood.ogg', 0, 0, 75))
+					to_chat(BD, "<span class='warning'>Eww, that is <b>GROSS</b>.</span>")
+					return
 				var/mob/living/LV = BD.pulling
 				if(LV.bloodpool <= 0 && !iskindred(BD.pulling))
 					SEND_SOUND(BD, sound('code/modules/wod13/sounds/need_blood.ogg', 0, 0, 75))
 					to_chat(BD, "<span class='warning'>There is no <b>BLOOD</b> in this creature.</span>")
 					return
-				if(LV.stat == 4 && !HAS_TRAIT(BD, TRAIT_GULLET))
+				if(LV.stat == DEAD && !HAS_TRAIT(BD, TRAIT_GULLET))
 					SEND_SOUND(BD, sound('code/modules/wod13/sounds/need_blood.ogg', 0, 0, 75))
 					to_chat(BD, "<span class='warning'>This creature is <b>DEAD</b>.</span>")
 					return
@@ -343,9 +331,9 @@
 	SEND_SOUND(usr, sound('code/modules/wod13/sounds/highlight.ogg', 0, 0, 50))
 	if(ishuman(usr))
 		var/mob/living/carbon/human/BD = usr
-		if(world.time < BD.last_bloodheal_use+30)
+		if(world.time < (BD.last_bloodheal_use + 3 SECONDS))
 			return
-		if(world.time < BD.last_bloodheal_click+10)
+		if(world.time < (BD.last_bloodheal_click + 1 SECONDS))
 			return
 		BD.last_bloodheal_click = world.time
 		var/plus = 0
@@ -429,7 +417,7 @@
 			if(!HAS_TRAIT(BD, TRAIT_IGNORESLOWDOWN))
 				ADD_TRAIT(BD, TRAIT_IGNORESLOWDOWN, SPECIES_TRAIT)
 			BD.update_blood_hud()
-			addtimer(CALLBACK(src, .proc/end_bloodpower), 100+BD.discipline_time_plus+BD.bloodpower_time_plus)
+			addtimer(CALLBACK(src, PROC_REF(end_bloodpower)), 100+BD.discipline_time_plus+BD.bloodpower_time_plus)
 		else
 			SEND_SOUND(BD, sound('code/modules/wod13/sounds/need_blood.ogg', 0, 0, 75))
 			to_chat(BD, "<span class='warning'>You don't have enough <b>BLOOD</b> to become more powerful.</span>")
@@ -502,16 +490,16 @@
 	else
 		harm_focus = dir
 
-/mob/living/Click()
-	if(ishuman(usr) && usr != src)
-		var/mob/living/carbon/human/SH = usr
-		for(var/atom/movable/screen/disciplines/DISCP in SH.hud_used.static_inventory)
-			if(DISCP)
-				if(DISCP.active)
-					DISCP.range_activate(src, SH)
-					SH.face_atom(src)
-					return
-	..()
+//mob/living/Click()
+//	if(ishuman(usr) && usr != src)
+//		var/mob/living/carbon/human/SH = usr
+//		for(var/atom/movable/screen/disciplines/DISCP in SH.hud_used.static_inventory)
+//			if(DISCP)
+//				if(DISCP.active)
+//					DISCP.range_activate(src, SH)
+//					SH.face_atom(src)
+//					return
+//	..()
 
 /atom/Click(location,control,params)
 /*
@@ -550,7 +538,7 @@
 							HUY.put_in_active_hand(item_to_pick)
 						return
 	..()
-
+/*
 /atom/movable/screen/disciplines/Initialize()
 	. = ..()
 
@@ -651,7 +639,7 @@
 		last_discipline_use = world.time
 	active = FALSE
 	icon_state = main_state
-
+*/
 /mob/living/carbon/werewolf/Life()
 	. = ..()
 	update_blood_hud()

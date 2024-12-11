@@ -28,13 +28,13 @@
 		add_overlay(scar_overlay)
 
 	switch(getFireLoss()+getBruteLoss())
-		if(25 to 50)
+		if(25 to 100)
 			var/mutable_appearance/damage_overlay = mutable_appearance(icon, "damage1[laid_down ? "_rest" : ""]")
 			add_overlay(damage_overlay)
-		if(50 to 75)
+		if(100 to 250)
 			var/mutable_appearance/damage_overlay = mutable_appearance(icon, "damage2[laid_down ? "_rest" : ""]")
 			add_overlay(damage_overlay)
-		if(75 to INFINITY)
+		if(250 to INFINITY)
 			var/mutable_appearance/damage_overlay = mutable_appearance(icon, "damage3[laid_down ? "_rest" : ""]")
 			add_overlay(damage_overlay)
 
@@ -46,7 +46,7 @@
 			if("Glasswalkers")
 				var/mutable_appearance/clothing_overlay = mutable_appearance(icon, "glasswalker[sprite_apparel][laid_down ? "_rest" : ""]")
 				add_overlay(clothing_overlay)
-			if("Black Spiral")
+			if("Black Spiral Dancers")
 				var/mutable_appearance/clothing_overlay = mutable_appearance(icon, "spiral[sprite_apparel][laid_down ? "_rest" : ""]")
 				add_overlay(clothing_overlay)
 

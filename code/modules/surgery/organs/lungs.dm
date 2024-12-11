@@ -3,13 +3,15 @@
 	var/operated = FALSE	//whether we can still have our damages fixed through surgery
 	name = "lungs"
 	icon_state = "lungs"
+	illegal = TRUE
+	cost = 800
 	zone = BODY_ZONE_CHEST
 	slot = ORGAN_SLOT_LUNGS
 	gender = PLURAL
 	w_class = WEIGHT_CLASS_SMALL
 
 	healing_factor = STANDARD_ORGAN_HEALING
-	decay_factor = STANDARD_ORGAN_DECAY * 0.9 // fails around 16.5 minutes, lungs are one of the last organs to die (of the ones we have)
+	decay_factor = STANDARD_ORGAN_DECAY * 0.45 // fails around 33 minutes, lungs are one of the last organs to die (of the ones we have)
 
 	low_threshold_passed = "<span class='warning'>You feel short of breath.</span>"
 	high_threshold_passed = "<span class='warning'>You feel some sort of constriction around your chest as your breathing becomes shallow and rapid.</span>"

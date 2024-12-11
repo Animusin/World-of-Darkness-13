@@ -14,10 +14,10 @@
 	if(b)
 		var/obj/item/vamp/creditcard/card = locate() in b.contents
 		if(card && card.has_checked == FALSE)
-			for(var/obj/item/vamp/creditcard/card in b.contents)
-				if(card)
-					H.bank_id = card.account.bank_id
-					card.has_checked = TRUE
+			for(var/obj/item/vamp/creditcard/caard in b.contents)
+				if(caard)
+					H.bank_id = caard.account.bank_id
+					caard.has_checked = TRUE
 //CAMARILLA
 
 /datum/job/vamp/prince
@@ -48,20 +48,22 @@
 
 	minimal_generation = 10	//Uncomment when players get exp enough
 	minimal_masquerade = 5
-	kindred_only = TRUE
-	allowed_bloodlines = list("Tremere", "Ventrue", "Nosferatu", "Toreador", "Malkavian", "Brujah", "Lasombra", "Gangrel")
+	allowed_species = list("Vampire")
+	allowed_bloodlines = list("Tremere", "Ventrue", "Nosferatu", "Toreador", "Malkavian", "Brujah", "Lasombra", "Gangrel", "True Brujah")
 
 	my_contact_is_important = TRUE
-	known_contacts = list("Sheriff",
-												"Seneschal",
-												"Baron")
+	known_contacts = list(
+		"Sheriff",
+		"Seneschal",
+		"Baron"
+	)
 
 	v_duty = "You are the top dog of this city. You hold Praxis over San Francisco, and your word is law. Make sure the Masquerade is upheld, and your status is respected."
 	experience_addition = 25
 
 /datum/job/vamp/prince/announce(mob/living/carbon/human/H)
 	..()
-	SSticker.OnRoundstart(CALLBACK(GLOBAL_PROC, .proc/minor_announce, "Prince [H.real_name] is in the city!"))
+	SSticker.OnRoundstart(CALLBACK(GLOBAL_PROC, PROC_REF(minor_announce), "Prince [H.real_name] is in the city!"))
 
 /datum/outfit/job/prince
 	name = "Prince"
@@ -133,7 +135,8 @@
 
 	minimal_generation = 12	//Uncomment when players get exp enough
 	minimal_masquerade = 5
-	kindred_only = TRUE
+	allowed_species = list("Vampire")
+	allowed_bloodlines = list("True Brujah", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry")
 
 	my_contact_is_important = TRUE
 	known_contacts = list("Prince")
@@ -222,7 +225,7 @@
 	v_duty = "You are the right hand man or woman of the most powerful vampire in the city. The Camarilla trusts you to run the city, even in their stead."
 	duty = "You are the right hand man or woman of the most powerful vampire in the city. The Camarilla trusts you to run the city, even in their stead."
 	experience_addition = 15
-	allowed_bloodlines = list("Daughters of Cacaphony", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Lasombra")
+	allowed_bloodlines = list("Daughters of Cacophony", "True Brujah", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Lasombra", "Gargoyle", "Kiasyd")
 
 /datum/outfit/job/clerk
 	name = "Seneschal"
@@ -277,7 +280,7 @@
 	v_duty = "You are the Prince's enforcer. You report to the sheriff and uphold the Traditions."
 	minimal_masquerade = 4
 	experience_addition = 10
-	allowed_bloodlines = list("Daughters of Cacaphony", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Lasombra")
+	allowed_bloodlines = list("True Brujah", "Daughters of Cacophony", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Lasombra", "Gargoyle", "Kiasyd")
 
 /datum/outfit/job/agent
 	name = "Scourge"
@@ -330,7 +333,7 @@
 	v_duty = "A vile curse has gripped the dead of this city. You must keep the graveyard clean and the Masquerade intact."
 	minimal_masquerade = 0
 	experience_addition = 15
-	allowed_bloodlines = list("Daughters of Cacaphony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff")
+	allowed_bloodlines = list("True Brujah", "Daughters of Cacophony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff")
 
 /datum/outfit/job/graveyard
 	name = "Graveyard Keeper"
@@ -374,14 +377,14 @@
 
 	liver_traits = list(TRAIT_MEDICAL_METABOLISM)
 
-	humans_accessible = TRUE
+	allowed_species = list("Vampire", "Ghoul", "Human", "Werewolf")
 	display_order = JOB_DISPLAY_ORDER_DOCTOR
 	bounty_types = CIV_JOB_MED
 
 	v_duty = "Help your fellow kindred in all matters medicine related. Sell blood. Keep your human colleagues ignorant."
 	duty = "Collect blood by helping mortals at the Clinic."
 	experience_addition = 15
-	allowed_bloodlines = list("Daughters of Cacaphony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff")
+	allowed_bloodlines = list("Daughters of Cacophony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff", "Kiasyd")
 
 /datum/outfit/job/vdoctor
 	name = "Doctor"
@@ -395,6 +398,7 @@
 	l_hand = /obj/item/storage/firstaid/medical
 	l_pocket = /obj/item/vamp/phone
 	r_pocket = /obj/item/vamp/keys/clinic
+	r_hand = /obj/item/radio/clinic
 	backpack_contents = list(/obj/item/passport=1, /obj/item/cockclock=1, /obj/item/flashlight=1, /obj/item/vamp/creditcard=1)
 
 	backpack = /obj/item/storage/backpack
@@ -409,11 +413,11 @@
 
 /datum/job/vamp/vjanitor
 	title = "Street Janitor"
-	department_head = list("Baron")
+	department_head = list("Prince")
 	faction = "Vampire"
 	total_positions = 6
 	spawn_positions = 6
-	supervisors = "the Camarilla or the Anarchs"
+	supervisors = "the Camarilla."
 	selection_color = "#e3e3e3"
 
 	outfit = /datum/outfit/job/vjanitor
@@ -423,13 +427,13 @@
 	paycheck = PAYCHECK_EASY
 	paycheck_department = ACCOUNT_SRV
 
-	humans_accessible = TRUE
+	allowed_species = list("Vampire", "Ghoul", "Human")
 
 	display_order = JOB_DISPLAY_ORDER_STREETJAN
-	allowed_bloodlines = list("Daughters of Cacaphony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff")
+	allowed_bloodlines = list("True Brujah", "Daughters of Cacophony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff")
 
 	v_duty = "Clean up all traces of Masquerade violations as the Camarilla has instructed you to."
-	duty = "Keep the streets clean. The government does pay you much to keep your mouth shut about the things you see."
+	duty = "Keep the streets clean. You are paid to keep your mouth shut and keep questions to yourselves."
 	minimal_masquerade = 0
 	experience_addition = 15
 
@@ -455,7 +459,7 @@
 	faction = "Vampire"
 	total_positions = 1
 	spawn_positions = 1
-	supervisors = "the Traditions"
+	supervisors = "the Pyramid"
 	selection_color = "#ab2508"
 
 	outfit = /datum/outfit/job/regent
@@ -467,12 +471,13 @@
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
 	display_order = JOB_DISPLAY_ORDER_REGENT
-
-	v_duty = "Keep a census of events and provide information to archivists. Lead the Chantry. You report to the Tremere Lord of this region first, Prince second."
+	v_duty = "Lead the Chantry. You serve as both the Regent and Tremere Primogen. You report to the Tremere Lord of this region first, Prince second."
 	minimal_masquerade = 4
-	kindred_only = TRUE
+	minimal_generation = 7
+	allowed_species = list("Vampire")
 	allowed_bloodlines = list("Tremere")
 	experience_addition = 20
+	known_contacts = list("Prince")
 
 /datum/outfit/job/regent
 	name = "Chantry Regent"
@@ -521,8 +526,8 @@
 
 	v_duty = "Keep a census of events and provide information to neonates. Listen to the Regent Carefully. Study blood magic and protect the chantry."
 	minimal_masquerade = 3
-	kindred_only = TRUE
-	allowed_bloodlines = list("Tremere")
+	allowed_species = list("Vampire")
+	allowed_bloodlines = list("Tremere", "Gargoyle")
 	experience_addition = 15
 
 /datum/outfit/job/archivist
@@ -573,13 +578,15 @@
 //	minimal_generation = 11	//Uncomment when players get exp enough
 
 	my_contact_is_important = TRUE
-	known_contacts = list("Prince",
-												"Dealer")
+	known_contacts = list(
+		"Prince",
+		"Dealer"
+	)
 
 	v_duty = "You lead the Anarchs in the City. A Camarilla faction that values freedom and individuality. While not a fan of the traditions, you still respect the Masquerade."
 	minimal_masquerade = 3
-	kindred_only = TRUE
-	allowed_bloodlines = list("Brujah", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Ventrue", "Lasombra")
+	allowed_species = list("Vampire")
+	allowed_bloodlines = list("Daughters of Cacophony", "True Brujah", "Brujah", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Ventrue", "Lasombra", "Gargoyle")
 	experience_addition = 20
 
 /datum/outfit/job/barkeeper
@@ -628,7 +635,7 @@
 
 	display_order = JOB_DISPLAY_ORDER_BOUNCER
 	known_contacts = list("Baron")
-	allowed_bloodlines = list("Daughters of Cacaphony", "Brujah", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Tzimisce", "Caitiff", "Lasombra")
+	allowed_bloodlines = list("Daughters of Cacophony", "True Brujah", "Brujah", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Tzimisce", "Caitiff", "Ventrue", "Lasombra", "Gargoyle", "Kiasyd")
 
 	v_duty = "You work with the baron - whether because of your own ideals or friendship, or other reasons. That doesn't mean you will let someone disregard the one tradition you do agree with - the Masquerade."
 	minimal_masquerade = 2
@@ -681,11 +688,11 @@
 
 	my_contact_is_important = TRUE
 	known_contacts = list("Baron", "Prince", "Sheriff")
-	allowed_bloodlines = list("Brujah", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Tzimisce", "Caitiff", "Ventrue", "Ministry")
+	allowed_bloodlines = list("True Brujah", "Brujah", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Tzimisce", "Caitiff", "Ventrue", "Ministry", "Kiasyd")
 
 	v_duty = "You provide supplies to other kindred. The warehouse is yours, and it's your business who you'll deal with."
 	minimal_masquerade = 3
-	kindred_only = TRUE
+	allowed_species = list("Vampire")
 	experience_addition = 20
 
 /datum/outfit/job/dealer
@@ -728,9 +735,9 @@
 	paycheck_department = ACCOUNT_CAR
 	display_order = JOB_DISPLAY_ORDER_SUPPLY
 	bounty_types = CIV_JOB_RANDOM
-	humans_accessible = TRUE
+	allowed_species = list("Vampire", "Ghoul", "Human")
 	known_contacts = list("Baron", "Prince", "Sheriff")
-	allowed_bloodlines = list("Daughters of Cacaphony", "Brujah", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Tzimisce", "Caitiff", "Lasombra")
+	allowed_bloodlines = list("True Brujah", "Daughters of Cacophony", "Brujah", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Tzimisce", "Caitiff", "Lasombra", "Gargoyle", "Kiasyd")
 
 	v_duty = "You work for the Dealer, or are a part of their coterie. They pay well and the job is easy. Don't disappoint them."
 	duty = "Though your boss is odd and only works late night hours, they pay you well enough that you avoid questioning it."
@@ -778,13 +785,12 @@
 	paycheck_department = ACCOUNT_CIV
 	display_order = JOB_DISPLAY_ORDER_CITIZEN
 
-	humans_accessible = TRUE
-	garou_allowed = FALSE
+	allowed_species = list("Vampire", "Ghoul", "Human", "Werewolf")
 
 	v_duty = "Follow the traditions of the Camarilla. Obey the Prince and their authority. The city belongs to him. Aligning yourself with your clan members would be of benefit."
 	duty = "Obey the authorities... Or don't. You are up late tonight for one reason or another."
 	minimal_masquerade = 0
-	allowed_bloodlines = list("Daughters of Cacaphony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff", "Old Clan Tzimisce")
+	allowed_bloodlines = list("True Brujah", "Daughters of Cacophony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff", "Old Clan Tzimisce", "Kiasyd")
 
 /datum/outfit/job/citizen
 	name = "Citizen"
@@ -837,12 +843,12 @@
 
 	paycheck_department = ACCOUNT_CIV
 	display_order = JOB_DISPLAY_ORDER_STRIP
-	humans_accessible = TRUE
+	allowed_species = list("Vampire", "Ghoul", "Human", "Werewolf")
 
 	v_duty = "Offer strip club services to humans or undead."
 	duty = "Offer strip club services."
 	minimal_masquerade = 3
-	allowed_bloodlines = list("Daughters of Cacaphony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff")
+	allowed_bloodlines = list("True Brujah", "Daughters of Cacophony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff", "Kiasyd")
 	experience_addition = 10
 
 /datum/outfit/job/strip
@@ -1204,6 +1210,14 @@
 	var/obj/effect/landmark/start/D = pick(landmarkslist)
 	H.forceMove(D.loc)
 
+	var/my_name = "Tyler"
+	if(H.gender == MALE)
+		my_name = pick(GLOB.first_names_male)
+	else
+		my_name = pick(GLOB.first_names_female)
+	var/my_surname = pick(GLOB.last_names)
+	H.fully_replace_character_name(null,"[my_name] [my_surname]")
+
 /obj/effect/landmark/start/caitiff
 	name = "Caitiff"
 	delete_after_roundstart = FALSE
@@ -1258,21 +1272,28 @@
 	H.generation = 13
 	H.maxHealth = round((initial(H.maxHealth)-initial(H.maxHealth)/4)+(initial(H.maxHealth)/4)*(H.physique+13-H.generation))
 	H.health = round((initial(H.health)-initial(H.health)/4)+(initial(H.health)/4)*(H.physique+13-H.generation))
-	for(var/atom/movable/screen/blood/B in H.hud_used.infodisplay)
-		B.icon_state = null
-	for(var/atom/movable/screen/healths/HE in H.hud_used.infodisplay)
-		HE.icon = 'code/modules/wod13/ghoul_health.dmi'
-	for(var/atom/movable/screen/drinkblood/DB in H.hud_used.static_inventory)
-		DB.icon_state = null
-	for(var/atom/movable/screen/bloodheal/BH in H.hud_used.static_inventory)
-		BH.icon_state = null
-	for(var/atom/movable/screen/bloodpower/BP in H.hud_used.static_inventory)
-		BP.icon_state = null
-	for(var/atom/movable/screen/disciplines/DI in H.hud_used.static_inventory)
-		DI.icon_state = null
+	var/my_name = "Tyler"
+	if(H.gender == MALE)
+		my_name = pick(GLOB.first_names_male)
+	else
+		my_name = pick(GLOB.first_names_female)
+	var/my_surname = pick(GLOB.last_names)
+	H.fully_replace_character_name(null,"[my_name] [my_surname]")
+//	for(var/atom/movable/screen/blood/B in H.hud_used.infodisplay)
+//		B.icon_state = null
+//	for(var/atom/movable/screen/healths/HE in H.hud_used.infodisplay)
+//		HE.icon = 'code/modules/wod13/ghoul_health.dmi'
+//	for(var/atom/movable/screen/drinkblood/DB in H.hud_used.static_inventory)
+//		DB.icon_state = null
+//	for(var/atom/movable/screen/bloodheal/BH in H.hud_used.static_inventory)
+//		BH.icon_state = null
+//	for(var/atom/movable/screen/bloodpower/BP in H.hud_used.static_inventory)
+//		BP.icon_state = null
+//	for(var/atom/movable/screen/disciplines/DI in H.hud_used.static_inventory)
+//		DI.icon_state = null
 	for(var/datum/action/A in H.actions)
 		if(A.vampiric)
-			qdel(A)
+			A.Remove(H)
 	H.thaumaturgy_knowledge = FALSE
 	QDEL_NULL(H.clane)
 	var/obj/item/organ/eyes/NV = new()
@@ -1372,12 +1393,132 @@
 		H.mind.add_antag_datum(/datum/antagonist/sabbatist)
 	GLOB.sabbatites += H
 
+	var/my_name = "Tyler"
+	if(H.gender == MALE)
+		my_name = pick(GLOB.first_names_male)
+	else
+		my_name = pick(GLOB.first_names_female)
+	var/my_surname = pick(GLOB.last_names)
+	H.fully_replace_character_name(null,"[my_name] [my_surname]")
+//Commented out code for future sabbat character setup
+/*
+	H.generation = 13
+	H.clane = null
+
+	H.maxHealth = round((initial(H.maxHealth)-initial(H.maxHealth)/4)+(initial(H.maxHealth)/4)*(H.physique+13-H.generation))
+	H.health = round((initial(H.health)-initial(H.health)/4)+(initial(H.health)/4)*(H.physique+13-H.generation))
+	H.thaumaturgy_knowledge = FALSE
+	QDEL_NULL(H.clane)
+	var/obj/item/organ/eyes/NV = new()
+	NV.Insert(H, TRUE, FALSE)
+	add_verb(H, /datum/job/sabbatist/verb/setup_character)
+*/
+
 	var/list/landmarkslist = list()
 	for(var/obj/effect/landmark/start/S in GLOB.start_landmarks_list)
 		if(S.name == name)
 			landmarkslist += S
 	var/obj/effect/landmark/start/D = pick(landmarkslist)
 	H.forceMove(D.loc)
+
+//Commented out code for future sabbat character setup
+/*
+/datum/job/sabbatist/verb/setup_character()
+	set category = "Sabbat"
+	set name = "Set Up Character"
+	set desc = "Prepare your character."
+	var/list/clans = list("Tzimisce", "Lasombra", "Gangrel", "Brujah", "Toreador", "Ventrue")
+	var/list/generations = list(8, 9, 10, 11, 12, 13)
+	var/total_points = 10
+	var/points_spent = 0
+
+	var/clan_choice = input("Choose your clan:", "Clan Selection") in clans
+	var/generation_choice = input("Choose your generation:", "Generation Selection") in generations
+
+	var/discipline1
+	var/discipline2
+	var/discipline3
+	switch(clan_choice)
+		if("Tzimisce")
+			discipline1 = "Animalism"
+			discipline2 = "Auspex"
+			discipline3 = "Vicissitude"
+		if("Lasombra")
+			discipline1 = "Dominate"
+			discipline2 = "Obtenebration"
+			discipline3 = "Potence"
+		if("Gangrel")
+			discipline1 = "Animalism"
+			discipline2 = "Fortitude"
+			discipline3 = "Protean"
+		if("Brujah")
+			discipline1 = "Celerity"
+			discipline2 = "Potence"
+			discipline3 = "Presence"
+		if("Toreador")
+			discipline1 = "Auspex"
+			discipline2 = "Celerity"
+			discipline3 = "Presence"
+		if("Ventrue")
+			discipline1 = "Dominate"
+			discipline2 = "Fortitude"
+			discipline3 = "Presence"
+	var/discipline1_level = 0
+	var/discipline2_level = 0
+	var/discipline3_level = 0
+
+	var/list/generation_costs = list(8 = 5, 9 = 4, 10 = 3, 11 = 2, 12 = 1, 13 = 0)
+	generation_choice = 13
+
+	while(points_spent < total_points)
+		var/list/choices = list("Discipline 1: [discipline1] (Level: [discipline1_level])", "Discipline 2: [discipline2] (Level: [discipline2_level])", "Discipline 3: [discipline3] (Level: [discipline3_level])", "Finish")
+		var/choice = input("Allocate your points. Points remaining: [total_points - points_spent]", "Discipline Allocation") in choices
+
+		if(choice == "Finish")
+			break
+
+		if(choice == "Discipline 1: [discipline1] (Level: [discipline1_level])")
+			if(points_spent < total_points)
+				discipline1_level += 1
+				points_spent += 1
+		if(choice == "Discipline 2: [discipline2] (Level: [discipline2_level])")
+			if(points_spent < total_points)
+				discipline2_level += 1
+				points_spent += 1
+		if(choice == "Discipline 3: [discipline3] (Level: [discipline3_level])")
+			if(points_spent < total_points)
+				discipline3_level += 1
+				points_spent += 1
+		if(choice == "Choose Generation (Current: [generation_choice])")
+			var/new_generation = input("Choose your generation:", "Generation Selection") in generation_costs
+			var/cost = generation_costs[new_generation]
+			if(points_spent + cost <= total_points)
+				points_spent += cost
+				generation_choice = new_generation
+
+	H.skin_tone = get_vamp_skin_color(H.skin_tone)
+	H.update_body()
+	H.clane = new H.clane.type()
+	H.clane.on_gain(H)
+	if(H.clane.alt_sprite)
+		H.skin_tone = "albino"
+		H.update_body()
+	H.create_disciplines(FALSE, discipline1, discipline2, discipline3)
+
+//	H.discipline1 = discipline1_level
+//	H.discipline2 = discipline2_level
+//	H.discipline3 = discipline3_level
+
+	H.generation = generation_choice
+	H.maxbloodpool = 10+((13-min(13, H.generation))*3)
+	H.clane.enlightenment = H.clane.enlightenment
+	H.maxHealth = round((initial(H.maxHealth)-initial(H.maxHealth)/4)+(initial(H.maxHealth)/4)*(H.physique+13-H.generation))
+	H.health = round((initial(H.maxHealth)-initial(H.maxHealth)/4)+(initial(H.maxHealth)/4)*(H.physique+13-H.generation))
+
+	to_chat(H, "You have chosen [clan_choice] with generation [generation_choice]. Your disciplines are [discipline1] (Level: [discipline1_level]), [discipline2] (Level: [discipline2_level]) and [discipline3] (Level: [discipline3_level]).")
+	remove_verb(H, /datum/job/sabbatist/verb/setup_character)
+
+*/
 
 /obj/effect/landmark/start/sabbatist
 	name = "Sabbatist"
@@ -1397,7 +1538,7 @@
 	owner.special_role = src
 	var/datum/objective/custom/custom_objective = new
 	custom_objective.owner = owner
-	custom_objective.explanation_text = "Kill Camarilla's and Anarch's heads. They do not deserve to rule that land. You deserve."
+	custom_objective.explanation_text = "Sow chaos, maim, butcher and kill. When you're done The Ivory Tower should be but a distant memory."
 	objectives += custom_objective
 	var/datum/objective/survive/survive_objective = new
 	survive_objective.owner = owner
@@ -1414,57 +1555,8 @@
 	to_chat(owner.current, "<span class='alertsyndie'>You are the part of Sabbat.</span>")
 	owner.announce_objectives()
 
-/datum/job/vamp/giovanni
-	title = "Giovanni Member"
-	department_head = list("The Boss")
-	faction = "Vampire"
-	total_positions = 10
-	spawn_positions = 10
-	supervisors = "the Family and the Traditions"
-	selection_color = "#cb4aad"
-
-	outfit = /datum/outfit/job/giovanni
-
-	access = list(ACCESS_HYDROPONICS, ACCESS_BAR, ACCESS_KITCHEN, ACCESS_MORGUE, ACCESS_WEAPONS, ACCESS_MINERAL_STOREROOM, ACCESS_THEATRE)
-	minimal_access = list(ACCESS_BAR, ACCESS_MINERAL_STOREROOM, ACCESS_THEATRE)
-	paycheck = PAYCHECK_EASY
-	paycheck_department = ACCOUNT_SRV
-	display_order = JOB_DISPLAY_ORDER_GIOVANNI
-	exp_type_department = EXP_TYPE_INDEPENDENT
-
-//	minimal_generation = 11	//Uncomment when players get exp enough
-
-	v_duty = "Whether born or Embraced into the family, you are one of the Giovanni. Be you a necromancer, financier or lowly fledgling, remember that so long as you stand with your family, they too will stand with you."
-	minimal_masquerade = 0
-	experience_addition = 10
-	kindred_only = TRUE
-	allowed_bloodlines = list("Giovanni")
-
-/datum/outfit/job/giovanni
-	name = "Giovanni Member"
-	jobtype = /datum/job/vamp/giovanni
-
-	id = /obj/item/cockclock
-	glasses = /obj/item/clothing/glasses/vampire/sun
-	uniform = /obj/item/clothing/under/vampire/suit
-	suit = /obj/item/clothing/suit/vampire/trench
-	shoes = /obj/item/clothing/shoes/vampire
-	l_pocket = /obj/item/vamp/phone
-	r_pocket = /obj/item/vamp/keys/giovanni
-	backpack_contents = list(/obj/item/passport=1, /obj/item/flashlight=1, /obj/item/vamp/creditcard/rich=1)
-
-/datum/outfit/job/giovanni/pre_equip(mob/living/carbon/human/H)
-	..()
-	H.vampire_faction = "Giovanni"
-	if(H.gender == FEMALE)
-		uniform = /obj/item/clothing/under/vampire/suit/female
-		shoes = /obj/item/clothing/shoes/vampire/heels
-
-/obj/effect/landmark/start/giovanni
-	name = "Giovanni Member"
-//
 /datum/job/vamp/giovannielder
-	title = "Giovanni Boss"
+	title = "Capo"
 	department_head = list("Uncle Augie")
 	faction = "Vampire"
 	total_positions = 1
@@ -1483,14 +1575,14 @@
 
 	minimal_generation = 11	//Uncomment when players get exp enough
 
-	v_duty = " Pure blood runs through your veins and, with it, old power. Throughout your long life you have learnt to hold onto two things and never let go: money, and family."
+	v_duty = "Pure blood runs through your veins and, with it, old power. Throughout your long life you have learnt to hold onto two things and never let go: money, and family."
 	minimal_masquerade = 0
 	experience_addition = 10
-	kindred_only = TRUE
+	allowed_species = list("Vampire")
 	allowed_bloodlines = list("Giovanni")
 
 /datum/outfit/job/giovannielder
-	name = "Giovanni Boss"
+	name = "Capo"
 	jobtype = /datum/job/vamp/giovannielder
 
 	id = /obj/item/cockclock
@@ -1510,11 +1602,58 @@
 		shoes = /obj/item/clothing/shoes/vampire/heels
 
 /obj/effect/landmark/start/giovannielder
-	name = "Giovanni Boss"
-//
+	name = "Capo"
+
+/datum/job/vamp/giovanni
+	title = "La Squadra"
+	department_head = list("Capo")
+	faction = "Vampire"
+	total_positions = 10
+	spawn_positions = 10
+	supervisors = "the Family and the Traditions"
+	selection_color = "#cb4aad"
+
+	outfit = /datum/outfit/job/giovanni
+
+	access = list(ACCESS_HYDROPONICS, ACCESS_BAR, ACCESS_KITCHEN, ACCESS_MORGUE, ACCESS_WEAPONS, ACCESS_MINERAL_STOREROOM, ACCESS_THEATRE)
+	minimal_access = list(ACCESS_BAR, ACCESS_MINERAL_STOREROOM, ACCESS_THEATRE)
+	paycheck = PAYCHECK_EASY
+	paycheck_department = ACCOUNT_SRV
+	display_order = JOB_DISPLAY_ORDER_GIOVANNI
+	exp_type_department = EXP_TYPE_INDEPENDENT
+
+	v_duty = "Whether born or Embraced into the family, you are one of the Giovanni. Be you a necromancer, financier or lowly fledgling, remember that so long as you stand with your family, they too will stand with you."
+	minimal_masquerade = 0
+	experience_addition = 10
+	allowed_species = list("Vampire")
+	allowed_bloodlines = list("Giovanni")
+
+/datum/outfit/job/giovanni
+	name = "La Squadra"
+	jobtype = /datum/job/vamp/giovanni
+
+	id = /obj/item/cockclock
+	glasses = /obj/item/clothing/glasses/vampire/sun
+	uniform = /obj/item/clothing/under/vampire/suit
+	suit = /obj/item/clothing/suit/vampire/trench
+	shoes = /obj/item/clothing/shoes/vampire
+	l_pocket = /obj/item/vamp/phone
+	r_pocket = /obj/item/vamp/keys/giovanni
+	backpack_contents = list(/obj/item/passport=1, /obj/item/flashlight=1, /obj/item/vamp/creditcard/rich=1)
+
+/datum/outfit/job/giovanni/pre_equip(mob/living/carbon/human/H)
+	..()
+	H.vampire_faction = "Giovanni"
+	if(H.gender == FEMALE)
+		uniform = /obj/item/clothing/under/vampire/suit/female
+		shoes = /obj/item/clothing/shoes/vampire/heels
+
+/obj/effect/landmark/start/giovanni
+	name = "La Squadra"
+
 /datum/job/vamp/giovannimafia
-	title = "Mortal Giovanni"
-	department_head = list("Uncle Augie")
+	title = "La Famiglia"
+	department_head = list("Capo")
 	faction = "Vampire"
 	total_positions = 10
 	spawn_positions = 10
@@ -1532,16 +1671,14 @@
 
 //	minimal_generation = 11	//Uncomment when players get exp enough
 
-	kindred_only = FALSE
-	human_only = TRUE
-	humans_accessible = TRUE
+	allowed_species = list("Ghoul", "Human")
 	duty = "Your family is a strange one. Maybe you are strange too, because sitting next to your great uncles as an equal is something you are greatly interested in."
 	minimal_masquerade = 0
 	experience_addition = 10
 
 
 /datum/outfit/job/giovannimafia
-	name = "Mortal Giovanni"
+	name = "La Famiglia"
 	jobtype = /datum/job/vamp/giovannimafia
 	id = /obj/item/cockclock
 	glasses = /obj/item/clothing/glasses/vampire/sun
@@ -1559,8 +1696,8 @@
 		shoes = /obj/item/clothing/shoes/vampire/heels
 
 /obj/effect/landmark/start/giovannimafia
-	name = "Mortal Giovanni"
-//
+	name = "La Famiglia"
+
 /datum/job/vamp/taxi
 	title = "Taxi Driver"
 	department_head = list("Justicar")
@@ -1579,15 +1716,13 @@
 	display_order = JOB_DISPLAY_ORDER_TAXI
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-//	minimal_generation = 11	//Uncomment when players get exp enough
-	humans_accessible = TRUE
-	garou_allowed = FALSE
+	allowed_species = list("Vampire", "Ghoul", "Human", "Werewolf")
 
 	v_duty = "Drive people in the city."
 	duty = "Drive people in the city."
 	minimal_masquerade = 0
 	experience_addition = 10
-	allowed_bloodlines = list("Daughters of Cacaphony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff")
+	allowed_bloodlines = list("Daughters of Cacaphony", "Salubri", "Baali", "Brujah", "Tremere", "Ventrue", "Nosferatu", "Gangrel", "Toreador", "Malkavian", "Banu Haqim", "Giovanni", "Ministry", "Tzimisce", "Lasombra", "Caitiff", "Kiasyd")
 
 /datum/job/vamp/taxi/after_spawn(mob/living/H, mob/M, latejoin = FALSE)
 	..()
@@ -1722,7 +1857,7 @@
 	display_order = JOB_DISPLAY_ORDER_MALKAVIAN
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-	kindred_only = TRUE
+	allowed_species = list("Vampire")
 	allowed_bloodlines = list("Malkavian")
 	minimal_generation = 7	//Uncomment when players get exp enough
 
@@ -1772,7 +1907,7 @@
 	display_order = JOB_DISPLAY_ORDER_NOSFERATU
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-	kindred_only = TRUE
+	allowed_species = list("Vampire")
 	allowed_bloodlines = list("Nosferatu")
 	minimal_generation = 7	//Uncomment when players get exp enough
 
@@ -1787,6 +1922,7 @@
 	jobtype = /datum/job/vamp/primogen_nosferatu
 
 	id = /obj/item/card/id/primogen
+	mask = /obj/item/clothing/mask/vampire/shemagh
 	glasses = /obj/item/clothing/glasses/vampire/sun
 	uniform = /obj/item/clothing/under/vampire/suit
 	suit = /obj/item/clothing/suit/vampire/trench
@@ -1818,7 +1954,7 @@
 	display_order = JOB_DISPLAY_ORDER_VENTRUE
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-	kindred_only = TRUE
+	allowed_species = list("Vampire")
 	allowed_bloodlines = list("Ventrue")
 	minimal_generation = 7	//Uncomment when players get exp enough
 
@@ -1864,7 +2000,7 @@
 	display_order = JOB_DISPLAY_ORDER_TOREADOR
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-	kindred_only = TRUE
+	allowed_species = list("Vampire")
 	allowed_bloodlines = list("Toreador")
 	minimal_generation = 7	//Uncomment when players get exp enough
 
@@ -1912,7 +2048,7 @@
 	display_order = JOB_DISPLAY_ORDER_BRUJAH
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-	kindred_only = TRUE
+	allowed_species = list("Vampire")
 	allowed_bloodlines = list("Brujah")
 	minimal_generation = 7	//Uncomment when players get exp enough
 
@@ -1955,11 +2091,8 @@
 	display_order = JOB_DISPLAY_ORDER_POLICE
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-	kindred_only = FALSE
-	human_only = TRUE
-	humans_accessible = TRUE
-//	allowed_bloodlines = list()
-	minimal_generation = 13
+	allowed_species = list("Ghoul", "Human")
+	species_slots = list("Ghoul" = 1)
 
 	duty = "Enforce the Law."
 	minimal_masquerade = 0
@@ -1973,14 +2106,14 @@
 	uniform = /obj/item/clothing/under/vampire/police
 	shoes = /obj/item/clothing/shoes/vampire/jackboots
 	suit = /obj/item/clothing/suit/vampire/vest
-	belt = /obj/item/melee/classic_baton
+	belt = /obj/item/storage/belt/holster/detective/vampire/police
 	gloves = /obj/item/cockclock
 	id = /obj/item/card/id/police
 	l_pocket = /obj/item/vamp/phone
-	r_pocket = /obj/item/flashlight
+	r_pocket = /obj/item/radio/cop
 	l_hand = /obj/item/vamp/keys/police
 	r_hand = /obj/item/police_radio
-	backpack_contents = list(/obj/item/passport=1, /obj/item/implant/radio=1, /obj/item/vamp/creditcard=1)
+	backpack_contents = list(/obj/item/passport=1, /obj/item/implant/radio=1, /obj/item/vamp/creditcard=1, /obj/item/ammo_box/vampire/c9mm = 1, /obj/item/restraints/handcuffs = 1,/obj/item/melee/classic_baton/vampire = 1,/obj/item/vamp/keys/police = 1)
 
 
 /datum/job/vamp/fbi
@@ -2001,10 +2134,7 @@
 	display_order = JOB_DISPLAY_ORDER_FBI
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-	kindred_only = FALSE
-	human_only = TRUE
-	humans_accessible = TRUE
-//	allowed_bloodlines = list()
+	allowed_species = list("Human")
 	minimal_generation = 13
 
 	duty = "Enforce the Law."
@@ -2023,10 +2153,79 @@
 	id = /obj/item/card/id/police
 	gloves = /obj/item/cockclock
 	l_pocket = /obj/item/vamp/phone
-	r_pocket = /obj/item/flashlight
+	r_pocket = /obj/item/radio/cop
 	l_hand = /obj/item/vamp/keys/police
 	r_hand = /obj/item/police_radio
 	backpack_contents = list(/obj/item/passport=1, /obj/item/implant/radio=1, /obj/item/gun/ballistic/automatic/vampire/m1911=1, /obj/item/camera/detective=1, /obj/item/camera_film=1, /obj/item/taperecorder=1, /obj/item/tape=1, /obj/item/vamp/creditcard=1)
+
+/datum/job/vamp/priest
+	title = "Priest"
+	department_head = list("Bishop")
+	faction = "Vampire"
+	total_positions = 2
+	spawn_positions = 2
+	supervisors = "God"
+	selection_color = "#7e7e7e"
+
+	outfit = /datum/outfit/job/priest
+
+	access = list(ACCESS_HYDROPONICS, ACCESS_BAR, ACCESS_KITCHEN, ACCESS_MORGUE, ACCESS_WEAPONS, ACCESS_MINERAL_STOREROOM, ACCESS_THEATRE)
+	minimal_access = list(ACCESS_BAR, ACCESS_MINERAL_STOREROOM, ACCESS_THEATRE)
+	paycheck = PAYCHECK_EASY
+	paycheck_department = ACCOUNT_SRV
+	display_order = JOB_DISPLAY_ORDER_FBI
+	exp_type_department = EXP_TYPE_INDEPENDENT
+
+	allowed_species = list("Human")
+	minimal_generation = 13
+
+	duty = "Be the shepherd of the flock in San Francisco, lead them to salvation, piety and righteousness."
+	v_duty = "The mortals believe you to be their savior. The kindred look at you with suspicion. Yours is the charge of this church."
+	minimal_masquerade = 0
+	my_contact_is_important = FALSE
+
+/datum/outfit/job/priest
+	name = "Priest"
+	jobtype = /datum/job/vamp/priest
+
+	uniform = /obj/item/clothing/under/vampire/graveyard
+	shoes = /obj/item/clothing/shoes/vampire/jackboots
+	id = /obj/item/card/id/hunter
+	l_pocket = /obj/item/vamp/phone
+	r_pocket = /obj/item/flashlight
+	l_hand = /obj/item/vamp/keys/church
+	back = /obj/item/storage/backpack/satchel
+	backpack_contents = list(/obj/item/passport=1, /obj/item/vamp/creditcard=1)
+
+/datum/outfit/job/priest/pre_equip(mob/living/carbon/human/H)
+	..()
+	add_verb(H, /datum/job/vampire/priest/verb/choose_special)
+
+/datum/job/vampire/priest/verb/choose_special()
+	set category = "Priest"
+	set name = "Choose Special"
+	set desc = "Select Priest special ability."
+	var/list/loadouts = list("Numina", "True Faith")
+	spawn()
+		var/mob/living/carbon/human/H = src
+		if(is_species(H, /datum/species/human))
+			if(H.client)
+				var/loadout_type = input(H, "Choose what makes you special:", "Loadout") as anything in loadouts
+				remove_verb(H, /datum/job/vampire/priest/verb/choose_special)
+				switch(loadout_type)
+					if("Numina")
+						to_chat(H, "<span class='alertsyndie'>You have been blessed with psychic powers. They make you extraordinary among mortals, yet you still fear the horrors lurking unknown.</span>")
+						var/obj/effect/proc_holder/spell/targeted/numina_freeze/n_freeze = new(H)
+						var/obj/effect/proc_holder/spell/self/numina_heal/n_heal = new(H)
+						H.mind.AddSpell(n_freeze)
+						H.mind.AddSpell(n_heal)
+					if("True Faith")
+						H.mind.holy_role = HOLY_ROLE_PRIEST
+						H.resistant_to_disciplines = TRUE
+						to_chat(H, "<span class='alertsyndie'>Your faith in God is made of iron. None could shake it, and even in the darkest moments it holds you up.</span>")
+
+/obj/effect/landmark/start/priest
+	name = "Priest"
 
 /datum/job/vamp/triad_soldier
 	title = "Triad Soldier"
@@ -2046,20 +2245,17 @@
 	display_order = JOB_DISPLAY_ORDER_POLICE
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-	kindred_only = FALSE
-	human_only = TRUE
-	humans_accessible = TRUE
-//	allowed_bloodlines = list()
+	allowed_species = list("Human", "Werewolf")
 	minimal_generation = 13
 
 	duty = "Make money, do drugs, fight law. Your hideout is the laundromat in Chinatown."
 	experience_addition = 10
 	minimal_masquerade = 0
 	my_contact_is_important = FALSE
-//	known_contacts = list("Investigator")
 
 /datum/outfit/job/triad_soldier/pre_equip(mob/living/carbon/human/H)
 	..()
+	H.grant_language(/datum/language/chinese)
 	if(H.gender == FEMALE)
 		uniform = /obj/item/clothing/under/vampire/suit/female
 		shoes = /obj/item/clothing/shoes/vampire/heels
@@ -2099,7 +2295,7 @@
 	display_order = JOB_DISPLAY_ORDER_VOIVODE
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-	kindred_only = TRUE
+	allowed_species = list("Vampire")
 	allowed_bloodlines = list("Old Clan Tzimisce")
 	minimal_generation = 7
 
@@ -2141,7 +2337,7 @@
 	display_order = JOB_DISPLAY_ORDER_BOGATYR
 	exp_type_department = EXP_TYPE_INDEPENDENT
 
-	kindred_only = TRUE
+	allowed_species = list("Vampire")
 	allowed_bloodlines = list("Old Clan Tzimisce")
 	minimal_generation = 13	//Uncomment when players get exp enough
 

@@ -1,11 +1,17 @@
 /datum/action/gift
 	icon_icon = 'code/modules/wod13/werewolf_abilities.dmi'
+	button_icon = 'code/modules/wod13/werewolf_abilities.dmi'
 	check_flags = AB_CHECK_IMMOBILE|AB_CHECK_CONSCIOUS
 	var/rage_req = 0
 	var/gnosis_req = 0
 	var/cool_down = 0
 
 	var/allowed_to_proceed = FALSE
+
+/datum/action/gift/ApplyIcon(atom/movable/screen/movable/action_button/current_button, force = FALSE)
+	icon_icon = 'code/modules/wod13/werewolf_abilities.dmi'
+	button_icon = 'code/modules/wod13/werewolf_abilities.dmi'
+	. = ..()
 
 /datum/action/gift/Trigger()
 	. = ..()
@@ -25,7 +31,7 @@
 				SEND_SOUND(owner, sound('code/modules/wod13/sounds/werewolf_cast_failed.ogg', 0, 0, 75))
 				allowed_to_proceed = FALSE
 				return
-		if(cool_down+200 >= world.time)
+		if(cool_down+150 >= world.time)
 			allowed_to_proceed = FALSE
 			return
 		cool_down = world.time
@@ -348,8 +354,11 @@
 		if(C.stat != DEAD)
 			SEND_SOUND(owner, sound('code/modules/wod13/sounds/rage_heal.ogg', 0, 0, 75))
 			C.adjustBruteLoss(-50*C.auspice.level, TRUE)
-			C.adjustFireLoss(-50*C.auspice.level, TRUE)
-			C.adjustCloneLoss(-50*C.auspice.level, TRUE)
+			C.adjustFireLoss(-35*C.auspice.level, TRUE)
+			C.adjustCloneLoss(-25*C.auspice.level, TRUE)
+			C.adjustOxyLoss(-25*C.auspice.level, TRUE)
+			C.bloodpool = min(C.bloodpool + C.auspice.level, C.maxbloodpool)
+			C.blood_volume = min(C.blood_volume + 56 * C.auspice.level, BLOOD_VOLUME_NORMAL)
 			if(ishuman(owner))
 				var/mob/living/carbon/human/BD = owner
 				if(length(BD.all_wounds))
@@ -378,8 +387,72 @@
 /datum/action/change_apparel/Trigger()
 	. = ..()
 	var/mob/living/carbon/werewolf/crinos/C = owner
-	if(C.stat < 1)
+	if(C.stat == CONSCIOUS)
 		if(C.sprite_apparel == 4)
 			C.sprite_apparel = 0
 		else
 			C.sprite_apparel = min(4, C.sprite_apparel+1)
+
+/datum/action/gift/hispo
+	name = "Hispo Form"
+	desc = "Change your Lupus form into Hispo and backwards."
+	button_icon_state = "hispo"
+
+/datum/action/gift/hispo/Trigger()
+	. = ..()
+	if(allowed_to_proceed)
+		var/mob/living/carbon/werewolf/lupus/H = owner
+		playsound(get_turf(owner), 'code/modules/wod13/sounds/transform.ogg', 50, FALSE)
+		if(H.hispo)
+			H.icon = 'code/modules/wod13/werewolf_lupus.dmi'
+			H.pixel_w = 0
+			H.pixel_z = 0
+			H.melee_damage_lower = initial(H.melee_damage_lower)
+			H.melee_damage_upper = initial(H.melee_damage_upper)
+			H.hispo = FALSE
+			H.update_icons()
+		else
+			H.icon = 'code/modules/wod13/hispo.dmi'
+			H.pixel_w = -16
+			H.pixel_z = -16
+			H.melee_damage_lower = 25
+			H.melee_damage_upper = 65
+			H.hispo = TRUE
+			H.update_icons()
+
+/datum/action/gift/glabro
+	name = "Glabro Form"
+	desc = "Change your Homid form into Glabro and backwards."
+	button_icon_state = "glabro"
+
+/datum/action/gift/glabro/Trigger()
+	. = ..()
+	if(allowed_to_proceed)
+		var/mob/living/carbon/human/H = owner
+		var/datum/species/garou/G = H.dna.species
+		playsound(get_turf(owner), 'code/modules/wod13/sounds/transform.ogg', 50, FALSE)
+		if(G.glabro)
+			H.remove_overlay(PROTEAN_LAYER)
+			G.punchdamagelow -= 15
+			G.punchdamagehigh -= 15
+			H.physiology.armor.melee -= 15
+			H.physiology.armor.bullet -= 15
+			var/matrix/M = matrix()
+			M.Scale(1)
+			animate(H, transform = M, time = 1 SECONDS)
+			G.glabro = FALSE
+			H.update_icons()
+		else
+			H.remove_overlay(PROTEAN_LAYER)
+			var/mutable_appearance/glabro_overlay = mutable_appearance('code/modules/wod13/werewolf_abilities.dmi', H.transformator.crinos_form?.sprite_color, -PROTEAN_LAYER)
+			H.overlays_standing[PROTEAN_LAYER] = glabro_overlay
+			H.apply_overlay(PROTEAN_LAYER)
+			G.punchdamagelow += 15
+			G.punchdamagehigh += 15
+			H.physiology.armor.melee += 15
+			H.physiology.armor.bullet += 15
+			var/matrix/M = matrix()
+			M.Scale(1.3)
+			animate(H, transform = M, time = 1 SECONDS)
+			G.glabro = TRUE
+			H.update_icons()

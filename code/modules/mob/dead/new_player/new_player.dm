@@ -158,6 +158,10 @@
 		new_player_panel()
 
 	if(href_list["late_party"])
+		if (!can_respawn())
+			to_chat(src, "<span class='boldwarning'>You cannot respawn yet.</span>")
+			return
+
 		ready = PLAYER_NOT_READY
 		if(late_ready)
 			late_ready = FALSE
@@ -167,6 +171,10 @@
 			SSbad_guys_party.candidates += src
 
 	if(href_list["late_join"])
+		if (!can_respawn())
+			to_chat(usr, "<span class='boldwarning'>You cannot respawn yet.</span>")
+			return
+
 		SSbad_guys_party.candidates -= src
 		late_ready = FALSE
 		if(!SSticker?.IsRoundInProgress())
@@ -290,51 +298,42 @@
 			return "[jobtitle] is already filled to capacity."
 		if(JOB_UNAVAILABLE_GENERATION)
 			return "Your generation is too young for [jobtitle]."
+		if(JOB_UNAVAILABLE_SPECIES)
+			return "Your species cannot be [jobtitle]."
+		if(JOB_UNAVAILABLE_SPECIES_LIMITED)
+			return "Your species has a limit on how many can be [jobtitle]."
 	return "Error: Unknown job availability."
 
 /mob/dead/new_player/proc/IsJobUnavailable(rank, latejoin = FALSE)
+	var/bypass = FALSE
+	if (check_rights_for(client, R_ADMIN))
+		bypass = TRUE
 	var/datum/job/job = SSjob.GetJob(rank)
 	if(!job)
 		return JOB_UNAVAILABLE_GENERIC
-	if((job.current_positions >= job.total_positions) && job.total_positions != -1)
-		if(job.title == "Citizen")
-			if(isnum(client.player_age) && client.player_age <= 14) //Newbies can always be assistants
-				return JOB_AVAILABLE
-			for(var/datum/job/J in SSjob.occupations)
-				if(J && J.current_positions < J.total_positions && J.title != job.title)
-					return JOB_UNAVAILABLE_SLOTFULL
-		else
-			return JOB_UNAVAILABLE_SLOTFULL
+	if (job.title == "Citizen")
+		return JOB_AVAILABLE
+	if((job.current_positions >= job.total_positions) && (job.total_positions != -1))
+		return JOB_UNAVAILABLE_SLOTFULL
 	if(is_banned_from(ckey, rank))
 		return JOB_UNAVAILABLE_BANNED
 	if(QDELETED(src))
 		return JOB_UNAVAILABLE_GENERIC
-	if(!job.player_old_enough(client))
+	if(!job.player_old_enough(client) && !bypass)
 		return JOB_UNAVAILABLE_ACCOUNTAGE
-	if(job.required_playtime_remaining(client))
+	if(job.required_playtime_remaining(client) && !bypass)
 		return JOB_UNAVAILABLE_PLAYTIME
 	if(latejoin && !job.special_check_latejoin(client))
 		return JOB_UNAVAILABLE_GENERIC
-	if(client.prefs.generation > job.minimal_generation)
+	if((client.prefs.generation > job.minimal_generation) && !bypass)
 		return JOB_UNAVAILABLE_GENERATION
-	if(client.prefs.masquerade < job.minimal_masquerade)
+	if((client.prefs.masquerade < job.minimal_masquerade) && !bypass)
 		return JOB_UNAVAILABLE_MASQUERADE
-	if(job.kindred_only)
-		if(client.prefs.pref_species.name != "Vampire")
-			return JOB_UNAVAILABLE_SPECIES
-	if(!job.garou_allowed)
-		if(client.prefs.pref_species.name == "Werewolf")
-			return JOB_UNAVAILABLE_SPECIES
-	if(job.human_only)
-		if(client.prefs.pref_species.name != "Human")
-			return JOB_UNAVAILABLE_SPECIES
-	if(job.ghoul_only)
-		if(client.prefs.pref_species.name != "Ghoul")
-			return JOB_UNAVAILABLE_SPECIES
-	if(!job.humans_accessible)
-		if(client.prefs.pref_species.name == "Human")
-			return JOB_UNAVAILABLE_SPECIES
-	if(client.prefs.pref_species.name == "Vampire")
+	if(!job.allowed_species.Find(client.prefs.pref_species.name) && !bypass)
+		return JOB_UNAVAILABLE_SPECIES
+	if ((job.species_slots[client.prefs.pref_species.name] == 0) && !bypass)
+		return JOB_UNAVAILABLE_SPECIES_LIMITED
+	if((client.prefs.pref_species.name == "Vampire") && !bypass)
 		if(client.prefs.clane)
 			for(var/i in job.allowed_bloodlines)
 				if(i == client.prefs.clane.name)
@@ -401,7 +400,6 @@
 			SSshuttle.arrivals.QueueAnnounce(humanc, rank)
 		else
 			AnnounceArrival(humanc, rank)
-//		humanc.create_disciplines()
 		AddEmploymentContract(humanc)
 		if(GLOB.highlander)
 			to_chat(humanc, "<span class='userdanger'><i>THERE CAN BE ONLY ONE!!!</i></span>")
@@ -552,8 +550,17 @@
 				if(H.client.prefs.ambitious)
 					if(H.mind)
 						H.mind.add_antag_datum(/datum/antagonist/ambitious)
-				H.generate_friends()
 				GLOB.fucking_joined |= H.client.prefs.real_name
+				var/datum/relationship/R = new ()
+				H.Myself = R
+				R.owner = H
+				R.need_friend = H.client.prefs.friend
+				R.need_enemy = H.client.prefs.enemy
+				R.need_lover = H.client.prefs.lover
+				R.friend_text = H.client.prefs.friend_text
+				R.enemy_text = H.client.prefs.enemy_text
+				R.lover_text = H.client.prefs.lover_text
+				R.publish()
 		new_character = null
 		qdel(src)
 

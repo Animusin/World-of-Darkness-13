@@ -386,19 +386,32 @@
 	visible_message("<span class='name'>[src]</span> points at [A].", "<span class='notice'>You point at [A].</span>")
 	return TRUE
 
-
 /mob/living/verb/succumb(whispered as null)
 	set hidden = TRUE
 	if (!CAN_SUCCUMB(src))
 		to_chat(src, text="You are unable to succumb to death! This life continues.", type=MESSAGE_TYPE_INFO)
 		return
 	log_message("Has [whispered ? "whispered his final words" : "succumbed to death"] with [round(health, 0.1)] points of health!", LOG_ATTACK)
+	if(iskindred(src) && !HAS_TRAIT(src, TRAIT_TORPOR))
+		adjustOxyLoss(health - HEALTH_THRESHOLD_VAMPIRE_TORPOR)
+		updatehealth()
+	if(iskindred(src) && HAS_TRAIT(src, TRAIT_TORPOR))
+		adjustOxyLoss(health - HEALTH_THRESHOLD_VAMPIRE_DEAD)
 	if(!iskindred(src))
 		adjustOxyLoss(health - HEALTH_THRESHOLD_DEAD)
 		updatehealth()
 	if(!whispered)
 		to_chat(src, "<span class='notice'>You have given up life and succumbed to death.</span>")
-//	death()
+
+/mob/living/verb/untorpor()
+	set hidden = TRUE
+	if(HAS_TRAIT(src, TRAIT_TORPOR))
+		if (bloodpool > 0)
+			bloodpool -= 1
+			cure_torpor()
+			to_chat(src, "<span class='notice'>You have awoken from your Torpor.</span>")
+		else
+			to_chat(src, "<span class='warning'>You have no blood to re-awaken with...</span>")
 
 /mob/living/incapacitated(ignore_restraints = FALSE, ignore_grab = FALSE, ignore_stasis = FALSE)
 	if(HAS_TRAIT(src, TRAIT_INCAPACITATED) || (!ignore_restraints && (HAS_TRAIT(src, TRAIT_RESTRAINED) || (!ignore_grab && pulledby && pulledby.grab_state >= GRAB_AGGRESSIVE))) || (!ignore_stasis && IS_IN_STASIS(src)))
@@ -521,7 +534,7 @@
 
 /mob/living/proc/get_up(instant = FALSE)
 	set waitfor = FALSE
-	if(!instant && !do_mob(src, src, 1 SECONDS, timed_action_flags = (IGNORE_USER_LOC_CHANGE|IGNORE_TARGET_LOC_CHANGE|IGNORE_HELD_ITEM), extra_checks = CALLBACK(src, /mob/living/proc/rest_checks_callback), interaction_key = DOAFTER_SOURCE_GETTING_UP))
+	if(!instant && !do_mob(src, src, 1 SECONDS, timed_action_flags = (IGNORE_USER_LOC_CHANGE|IGNORE_TARGET_LOC_CHANGE|IGNORE_HELD_ITEM), extra_checks = CALLBACK(src, TYPE_PROC_REF(/mob/living, rest_checks_callback)), interaction_key = DOAFTER_SOURCE_GETTING_UP))
 		return
 	if(resting || body_position == STANDING_UP || HAS_TRAIT(src, TRAIT_FLOORED))
 		return
@@ -671,7 +684,7 @@
 				var/obj/effect/proc_holder/spell/spell = S
 				spell.updateButtonIcon()
 		if(excess_healing)
-			INVOKE_ASYNC(src, .proc/emote, "gasp")
+			INVOKE_ASYNC(src, PROC_REF(emote), "gasp")
 			log_combat(src, src, "revived")
 	else if(admin_revive)
 		updatehealth()
@@ -982,18 +995,23 @@
 	if(!what.canStrip(who))
 		to_chat(src, "<span class='warning'>You can't remove \the [what.name], it appears to be stuck!</span>")
 		return
-	who.visible_message("<span class='warning'>[src] tries to remove [who]'s [what.name].</span>", \
-					"<span class='userdanger'>[src] tries to remove your [what.name].</span>", null, null, src)
+	if(!enhanced_strip)
+		who.visible_message("<span class='warning'>[src] tries to remove [who]'s [what.name].</span>", \
+			"<span class='userdanger'>[src] tries to remove your [what.name].</span>", null, null, src)
 	to_chat(src, "<span class='danger'>You try to remove [who]'s [what.name]...</span>")
 	who.log_message("[key_name(who)] is being stripped of [what] by [key_name(src)]", LOG_ATTACK, color="red")
 	log_message("[key_name(who)] is being stripped of [what] by [key_name(src)]", LOG_ATTACK, color="red", log_globally=FALSE)
 	what.add_fingerprint(src)
-	if(do_mob(src, who, what.strip_delay, interaction_key = what))
-		if(what && Adjacent(who))
+	var/strip_delayed = what.strip_delay
+	if(enhanced_strip)
+		strip_delayed = 0.1 SECONDS
+	if(do_mob(src, who, min(strip_delayed, what.strip_delay), interaction_key = what))
+		if(what && (Adjacent(who) || (enhanced_strip && (get_dist(src, who) <= 3))))
+			enhanced_strip = FALSE
 			if(ishuman(src) && isnpc(who))
 				var/mob/living/carbon/human/H = src
 				var/mob/living/carbon/human/NPC = who
-				if(NPC.stat < 1)
+				if(NPC.stat < SOFT_CRIT)
 					if(istype(what, /obj/item/clothing) || istype(what, /obj/item/vamp/keys) || istype(what, /obj/item/stack/dollar))
 						H.AdjustHumanity(-1, 6)
 			if(islist(where))
@@ -1127,7 +1145,7 @@
 	if(!(mobility_flags & MOBILITY_UI) && !floor_okay)
 		to_chat(src, "<span class='warning'>You can't do that right now!</span>")
 		return FALSE
-	if(be_close && !Adjacent(M) && (M.loc != src))
+	if(be_close && !Adjacent(M) && (M.loc != src) && !enhanced_strip)
 		if(no_tk)
 			to_chat(src, "<span class='warning'>You are too far away!</span>")
 			return FALSE
@@ -1604,8 +1622,8 @@
 	if(!can_look_up())
 		return
 	changeNext_move(CLICK_CD_LOOK_UP)
-	RegisterSignal(src, COMSIG_MOVABLE_PRE_MOVE, .proc/stop_look_up) //We stop looking up if we move.
-	RegisterSignal(src, COMSIG_MOVABLE_MOVED, .proc/start_look_up) //We start looking again after we move.
+	RegisterSignal(src, COMSIG_MOVABLE_PRE_MOVE, PROC_REF(stop_look_up)) //We stop looking up if we move.
+	RegisterSignal(src, COMSIG_MOVABLE_MOVED, PROC_REF(start_look_up)) //We start looking again after we move.
 	start_look_up()
 
 /mob/living/proc/start_look_up()
@@ -1649,8 +1667,8 @@
 	if(!can_look_up()) //if we cant look up, we cant look down.
 		return
 	changeNext_move(CLICK_CD_LOOK_UP)
-	RegisterSignal(src, COMSIG_MOVABLE_PRE_MOVE, .proc/stop_look_down) //We stop looking down if we move.
-	RegisterSignal(src, COMSIG_MOVABLE_MOVED, .proc/start_look_down) //We start looking again after we move.
+	RegisterSignal(src, COMSIG_MOVABLE_PRE_MOVE, PROC_REF(stop_look_down)) //We stop looking down if we move.
+	RegisterSignal(src, COMSIG_MOVABLE_MOVED, PROC_REF(start_look_down)) //We start looking again after we move.
 	start_look_down()
 
 /mob/living/proc/start_look_down()

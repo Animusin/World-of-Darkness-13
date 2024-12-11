@@ -320,6 +320,36 @@
 	icon_state = "wood-window"
 	window = /obj/structure/window/fulltile
 
+/turf/closed/wall/vampwall/rust
+	name = "rusty wall"
+	desc = "A huge chunk of rusty metal used to separate rooms."
+	icon_state = "rust-0"
+	base_icon_state = "rust"
+
+/turf/closed/wall/vampwall/dirtywood
+	name = "dirty wood wall"
+	desc = "A huge chunk of brown metal used to separate rooms."
+	icon_state = "dirtywood-0"
+	base_icon_state = "dirtywood"
+
+/turf/closed/wall/vampwall/green
+	name = "green wall"
+	desc = "A huge chunk of green metal used to separate rooms."
+	icon_state = "green-0"
+	base_icon_state = "green"
+
+/turf/closed/wall/vampwall/rustbad
+	name = "rusty wall"
+	desc = "A huge chunk of rusty metal used to separate rooms."
+	icon_state = "rustbad-0"
+	base_icon_state = "rustbad"
+
+/turf/closed/wall/vampwall/redbrick
+	name = "red brick wall"
+	desc = "A huge chunk of red bricks used to separate rooms."
+	icon_state = "redbrick-0"
+	base_icon_state = "redbrick"
+
 //TURFS
 
 /obj/effect/decal/asphalt
@@ -712,6 +742,26 @@
 	. = ..()
 	icon_state = "cave[rand(1, 7)]"
 
+/turf/open/floor/plating/stone
+	gender = PLURAL
+	name = "rough floor"
+	icon = 'code/modules/wod13/tiles.dmi'
+	icon_state = "stone"
+	flags_1 = NONE
+	attachment_holes = FALSE
+	bullet_bounce_sound = null
+	footstep = FOOTSTEP_TROTUAR
+	barefootstep = FOOTSTEP_TROTUAR
+	clawfootstep = FOOTSTEP_HARD_CLAW
+	heavyfootstep = FOOTSTEP_GENERIC_HEAVY
+
+/turf/open/floor/plating/stone
+	icon_state = "stone1"
+
+/turf/open/floor/plating/stone/Initialize()
+	.=..()
+	icon_state = "cave[rand(1, 7)]"
+
 /turf/open/floor/plating/toilet
 	gender = PLURAL
 	name = "plating"
@@ -942,6 +992,38 @@
 	..()
 	set_light(1, 0.5, "#a4b7ff")
 
+/turf/open/floor/plating/vampacid
+	gender = PLURAL
+	name = "goop"
+	icon = 'code/modules/wod13/tiles.dmi'
+	icon_state = "acid"
+	flags_1 = NONE
+	attachment_holes = FALSE
+	bullet_bounce_sound = null
+	footstep = FOOTSTEP_WATER
+	barefootstep = FOOTSTEP_WATER
+	clawfootstep = FOOTSTEP_HARD_CLAW
+	heavyfootstep = FOOTSTEP_GENERIC_HEAVY
+	density = FALSE
+
+/turf/open/floor/plating/vampacid/Initialize()
+	..()
+	set_light(1, 0.5, "#1b7c4c")
+
+
+/turf/open/floor/plating/vampacid/Entered(atom/movable/AM)
+	if(acid_burn(AM))
+		START_PROCESSING(SSobj, src)
+
+/turf/open/floor/plating/vampacid/proc/acid_burn(mob/living/L)
+	if(isliving(L))
+		if(L.movement_type & FLYING)
+			return
+		L.apply_damage(30, TOX)
+		to_chat(L, "<span class='warning'>Your flesh burns!</span>")
+
+
+
 /obj/effect/decal/coastline
 	name = "water"
 	icon = 'code/modules/wod13/tiles.dmi'
@@ -979,11 +1061,11 @@
 	clawfootstep = FOOTSTEP_WATER
 	heavyfootstep = FOOTSTEP_WATER
 
-/*/turf/open/floor/plating/shit/Initialize()
+/turf/open/floor/plating/shit/Initialize()
 	. = ..()
 	if(prob(50))
 		new /obj/effect/realistic_fog(src)
-*/
+
 /turf/open/floor/plating/shit/border
 	icon_state = "shit_border"
 

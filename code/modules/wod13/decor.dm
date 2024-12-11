@@ -30,6 +30,11 @@
 	.=..()
 	AddElement(/datum/element/climbable)
 
+/obj/structure/vampfence/rich/Initialize()
+	.=..()
+	RemoveElement(/datum/element/climbable)
+
+
 /obj/structure/gargoyle
 	name = "\improper gargoyle"
 	desc = "Some kind of gothic architecture."
@@ -733,6 +738,12 @@
 	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF | FREEZE_PROOF
 	var/last_extracted = 0
 
+/obj/structure/reagent_dispensers/cleaningfluid
+	name = "cleaning fluid tank"
+	desc = "A container filled with cleaning fluid."
+	reagent_id = /datum/reagent/space_cleaner
+	icon_state = "water"
+
 /mob/living/carbon/human/MouseDrop(atom/over_object)
 	. = ..()
 	if(istype(over_object, /obj/structure/bloodextractor))
@@ -930,7 +941,7 @@
 		// Handle job slot/tater cleanup.
 		var/job = mob_occupant.mind.assigned_role
 		crew_member["job"] = job
-		SSjob.FreeRole(job)
+		SSjob.FreeRole(job, mob_occupant)
 //		if(LAZYLEN(mob_occupant.mind.objectives))
 //			mob_occupant.mind.objectives.Cut()
 		mob_occupant.mind.special_role = null
@@ -1304,9 +1315,32 @@
 
 /obj/structure/vampstatue
 	name = "statue"
-	desc = "Epic kind of art."
+	desc = "A cloaked figure forgotten to the ages."
 	icon = 'icons/effects/32x64.dmi'
 	icon_state = "statue"
+	plane = GAME_PLANE
+	layer = ABOVE_ALL_MOB_LAYER
+	anchored = TRUE
+	density = TRUE
+	resistance_flags = INDESTRUCTIBLE | LAVA_PROOF | FIRE_PROOF | UNACIDABLE | ACID_PROOF | FREEZE_PROOF
+
+/obj/structure/vampstatue/angel
+	name = "angel statue"
+	desc = "An angel stands before you. You're glad it's only stone."
+	icon = 'code/modules/wod13/64x64.dmi'
+	icon_state = "angelstatue"
+
+/obj/structure/vampstatue/cloaked
+	name = "cloaked figure"
+	desc = "He appears to be sitting."
+	icon = 'code/modules/wod13/32x48.dmi'
+	icon_state = "cloakedstatue"
+
+/obj/structure/bath
+	name = "bath"
+	desc = "Not big enough for hiding in."
+	icon = 'code/modules/wod13/props.dmi'
+	icon_state = "tub"
 	plane = GAME_PLANE
 	layer = ABOVE_ALL_MOB_LAYER
 	anchored = TRUE

@@ -13,8 +13,13 @@
 	violating_appearance = FALSE
 	male_clothes = "/obj/item/clothing/under/vampire/sport"
 	female_clothes = "/obj/item/clothing/under/vampire/red"
-	enlightement = TRUE
+	enlightenment = TRUE
 	var/obj/item/heirl
+	whitelisted = TRUE
+	current_accessory = "none"
+	accessories = list("spines", "spines_slim", "animal_skull", "none")
+	accessories_layers = list("spines" = UNICORN_LAYER, "spines_slim" = UNICORN_LAYER, "animal_skull" = UNICORN_LAYER, "none" = UNICORN_LAYER)
+
 
 /obj/effect/proc_holder/spell/targeted/shapeshift/tzimisce
 	name = "Tzimisce Form"
@@ -196,8 +201,11 @@
 
 /datum/discipline/vicissitude/post_gain(mob/living/carbon/human/H)
 	H.faction |= "Tzimisce"
-	var/datum/action/vicissitude/U = new()
-	U.Grant(H)
+	if (level >= 1)
+		var/datum/action/vicissitude/U = new()
+		U.Grant(H)
+		var/obj/item/organ/cyberimp/arm/surgery/S = new()
+		S.Insert(H)
 	if(level >= 3)
 		var/datum/action/basic_vicissitude/BV = new()
 		BV.Grant(H)
@@ -208,9 +216,9 @@
 		var/datum/action/vicissitude_form/VF = new()
 		VF.Grant(H)
 	if(H.mind)
-		H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_wall)
-		H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_stool)
-		H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_unicorn)
+		if(level >= 1)
+			H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_wall)
+			H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_stool)
 		if(level >= 2)
 			H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_floor)
 			H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_biter)
@@ -224,7 +232,7 @@
 			H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_heart)
 			H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_koldun)
 		if(level >= 5)
-			H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_stealth)
+//			H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_stealth)
 			H.mind.teach_crafting_recipe(/datum/crafting_recipe/tzi_trench)
 
 /datum/vampireclane/tzimisce/post_gain(mob/living/carbon/human/H)
@@ -238,9 +246,6 @@
 	)
 	H.equip_in_one_of_slots(heirloom, slots, FALSE)
 	heirl = heirloom
-//	H.add_quirk(/datum/quirk/ground_heirloom)
-	var/obj/item/organ/cyberimp/arm/surgery/S = new()
-	S.Insert(H)
 
 /datum/crafting_recipe/stake
 	name = "Stake"
@@ -263,14 +268,6 @@
 	time = 50
 	reqs = list(/obj/item/stack/human_flesh = 50, /obj/item/spine = 1)
 	result = /obj/item/clothing/suit/vampire/trench/tzi
-	always_available = FALSE
-	category = CAT_TZIMISCE
-
-/datum/crafting_recipe/tzi_unicorn
-	name = "Unicorn (Decoration)"
-	time = 50
-	reqs = list(/obj/item/organ/penis = 1)
-	result = /obj/item/organ/penicorn
 	always_available = FALSE
 	category = CAT_TZIMISCE
 
@@ -298,7 +295,7 @@
 	result = /obj/item/organ/eyes/night_vision/nightmare
 	always_available = FALSE
 	category = CAT_TZIMISCE
-
+/*
 /datum/crafting_recipe/tzi_stealth
 	name = "Stealth Skin (Invisibility)"
 	time = 50
@@ -306,7 +303,7 @@
 	result = /obj/item/dnainjector/chameleonmut
 	always_available = FALSE
 	category = CAT_TZIMISCE
-
+*/
 /datum/crafting_recipe/tzi_koldun
 	name = "Koldun Sorcery (Firebreath)"
 	time = 50
@@ -708,7 +705,7 @@
 	icon_living = "gangrel_f"
 	mob_biotypes = MOB_ORGANIC|MOB_HUMANOID
 	speak_chance = 0
-	speed = -1
+	speed = -0.5
 	maxHealth = 300
 	health = 300
 	butcher_results = list(/obj/item/stack/human_flesh = 20)
@@ -723,21 +720,24 @@
 	minbodytemp = 0
 	bloodpool = 10
 	maxbloodpool = 10
+	dextrous = TRUE
+	held_items = list(null, null)
+	possible_a_intents = list(INTENT_HELP, INTENT_GRAB, INTENT_DISARM, INTENT_HARM)
 
 /mob/living/simple_animal/hostile/gangrel/better
 	maxHealth = 500
 	health = 500
-	melee_damage_lower = 50
-	melee_damage_upper = 50
-	speed = -1
+	melee_damage_lower = 45
+	melee_damage_upper = 45
+	speed = -0.8
 
 /mob/living/simple_animal/hostile/gangrel/best
 	icon_state = "gangrel_m"
 	icon_living = "gangrel_m"
-	maxHealth = 500
-	health = 500
-	melee_damage_lower = 60
-	melee_damage_upper = 60
+	maxHealth = 600
+	health = 600
+	melee_damage_lower = 55
+	melee_damage_upper = 55
 	speed = -1
 
 /mob/living/simple_animal/hostile/gargoyle
@@ -753,8 +753,8 @@
 	health = 300
 	butcher_results = list(/obj/item/stack/human_flesh = 20)
 	harm_intent_damage = 5
-	melee_damage_lower = 15
-	melee_damage_upper = 15
+	melee_damage_lower = 30
+	melee_damage_upper = 30
 	attack_verb_continuous = "punches"
 	attack_verb_simple = "punch"
 	attack_sound = 'sound/weapons/punch1.ogg'

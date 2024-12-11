@@ -41,7 +41,7 @@
 	return ..()
 
 /obj/effect/decal/cleanable/blood/proc/get_timer()
-	drytime = world.time + 1 MINUTES
+	drytime = world.time + 15 SECONDS
 
 /obj/effect/decal/cleanable/blood/proc/start_drying()
 	get_timer()
@@ -117,7 +117,7 @@
 /obj/effect/decal/cleanable/blood/gibs/Initialize(mapload, list/datum/disease/diseases)
 	. = ..()
 	reagents.add_reagent(/datum/reagent/liquidgibs, 5)
-	RegisterSignal(src, COMSIG_MOVABLE_PIPE_EJECTING, .proc/on_pipe_eject)
+	RegisterSignal(src, COMSIG_MOVABLE_PIPE_EJECTING, PROC_REF(on_pipe_eject))
 	if(mapload) //Don't rot at roundstart for the love of god
 		return
 

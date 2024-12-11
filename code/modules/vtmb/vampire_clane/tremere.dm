@@ -12,10 +12,11 @@
 
 /datum/discipline/thaumaturgy/post_gain(mob/living/carbon/human/H)
 	H.faction |= "Tremere"
-	var/datum/action/thaumaturgy/T = new()
-	T.Grant(H)
-	T.level = level
-	H.thaumaturgy_knowledge = TRUE
+	if(level >= 1)
+		var/datum/action/thaumaturgy/T = new()
+		T.Grant(H)
+		T.level = level
+		H.thaumaturgy_knowledge = TRUE
 	if(level >= 3)
 		var/datum/action/bloodshield/B = new()
 		B.Grant(H)
@@ -87,7 +88,7 @@
 
 /datum/action/bloodshield/Trigger()
 	. = ..()
-	if(abuse_fix+100 > world.time)
+	if((abuse_fix + 25 SECONDS) > world.time)
 		return
 	var/mob/living/carbon/human/H = owner
 	if(H.bloodpool < 2)
@@ -96,12 +97,12 @@
 	H.bloodpool = max(0, H.bloodpool-2)
 	playsound(H.loc, 'code/modules/wod13/sounds/thaum.ogg', 50, FALSE)
 	abuse_fix = world.time
-	H.physiology.damage_resistance += 75
-	animate(H, color = "#ff0000", time = 10, loop = 1)
+	H.physiology.damage_resistance += 60
+	animate(H, color = "#ff0000", time = 1 SECONDS, loop = 1)
 	if(H.CheckEyewitness(H, H, 7, FALSE))
 		H.AdjustMasquerade(-1)
-	spawn(100)
+	spawn(15 SECONDS)
 		if(H)
 			playsound(H.loc, 'code/modules/wod13/sounds/thaum.ogg', 50, FALSE)
-			H.physiology.damage_resistance -= 75
+			H.physiology.damage_resistance -= 60
 			H.color = initial(H.color)

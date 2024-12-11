@@ -965,6 +965,8 @@
 		if(alert(usr, "Send [key_name(M)] back to Lobby?", "Message", "Yes", "No") != "Yes")
 			return
 
+		GLOB.respawn_timers[M.client.ckey] = 0
+
 		log_admin("[key_name(usr)] has sent [key_name(M)] back to the Lobby.")
 		message_admins("[key_name(usr)] has sent [key_name(M)] back to the Lobby.")
 
@@ -994,7 +996,7 @@
 		L.Unconscious(100)
 		sleep(5)
 		L.forceMove(pick(GLOB.tdome1))
-		addtimer(CALLBACK(GLOBAL_PROC, /proc/to_chat, L, "<span class='adminnotice'>You have been sent to the Thunderdome.</span>"), 5 SECONDS)
+		addtimer(CALLBACK(GLOBAL_PROC, GLOBAL_PROC_REF(to_chat), L, "<span class='adminnotice'>You have been sent to the Thunderdome.</span>"), 5 SECONDS)
 		log_admin("[key_name(usr)] has sent [key_name(L)] to the thunderdome. (Team 1)")
 		message_admins("[key_name_admin(usr)] has sent [key_name_admin(L)] to the thunderdome. (Team 1)")
 
@@ -1020,7 +1022,7 @@
 		L.Unconscious(100)
 		sleep(5)
 		L.forceMove(pick(GLOB.tdome2))
-		addtimer(CALLBACK(GLOBAL_PROC, /proc/to_chat, L, "<span class='adminnotice'>You have been sent to the Thunderdome.</span>"), 5 SECONDS)
+		addtimer(CALLBACK(GLOBAL_PROC, GLOBAL_PROC_REF(to_chat), L, "<span class='adminnotice'>You have been sent to the Thunderdome.</span>"), 5 SECONDS)
 		log_admin("[key_name(usr)] has sent [key_name(L)] to the thunderdome. (Team 2)")
 		message_admins("[key_name_admin(usr)] has sent [key_name_admin(L)] to the thunderdome. (Team 2)")
 
@@ -1043,7 +1045,7 @@
 		L.Unconscious(100)
 		sleep(5)
 		L.forceMove(pick(GLOB.tdomeadmin))
-		addtimer(CALLBACK(GLOBAL_PROC, /proc/to_chat, L, "<span class='adminnotice'>You have been sent to the Thunderdome.</span>"), 5 SECONDS)
+		addtimer(CALLBACK(GLOBAL_PROC, GLOBAL_PROC_REF(to_chat), L, "<span class='adminnotice'>You have been sent to the Thunderdome.</span>"), 5 SECONDS)
 		log_admin("[key_name(usr)] has sent [key_name(L)] to the thunderdome. (Admin.)")
 		message_admins("[key_name_admin(usr)] has sent [key_name_admin(L)] to the thunderdome. (Admin.)")
 
@@ -1073,7 +1075,7 @@
 		L.Unconscious(100)
 		sleep(5)
 		L.forceMove(pick(GLOB.tdomeobserve))
-		addtimer(CALLBACK(GLOBAL_PROC, /proc/to_chat, L, "<span class='adminnotice'>You have been sent to the Thunderdome.</span>"), 5 SECONDS)
+		addtimer(CALLBACK(GLOBAL_PROC, GLOBAL_PROC_REF(to_chat), L, "<span class='adminnotice'>You have been sent to the Thunderdome.</span>"), 5 SECONDS)
 		log_admin("[key_name(usr)] has sent [key_name(L)] to the thunderdome. (Observer.)")
 		message_admins("[key_name_admin(usr)] has sent [key_name_admin(L)] to the thunderdome. (Observer.)")
 
@@ -1461,6 +1463,24 @@
 
 		var/mob/M = locate(href_list["subtlemessage"])
 		usr.client.cmd_admin_subtle_message(M)
+
+	else if(href_list["adjustmasquerade"])
+		if(!check_rights(R_ADMIN))
+			return
+		var/mob/living/carbon/human/M = locate(href_list["adjustmasquerade"])
+		if(!M)
+			to_chat(usr, "Error: Could not locate the specified mob.")
+			return
+		usr.client.cmd_admin_adjust_masquerade(M)
+
+	else if(href_list["adjusthumanity"])
+		if(!check_rights(R_ADMIN))
+			return
+		var/mob/living/carbon/human/M = locate(href_list["adjusthumanity"])
+		if(!M)
+			to_chat(usr, "Error: Could not locate the specified mob.")
+			return
+		usr.client.cmd_admin_adjust_humanity(M)
 
 	else if(href_list["playsoundto"])
 		if(!check_rights(R_SOUND))
@@ -2325,6 +2345,26 @@
 		if(!check_rights(R_ADMIN))
 			return
 		GLOB.interviews.ui_interact(usr)
+
+	else if (href_list["deletewhitelist"])
+		if(!check_rights(R_ADMIN))
+			return
+		var/datum/whitelist/whitelist = locate(href_list["deletewhitelist"])
+		whitelist_option_parse_href(href_list, whitelist)
+
+	else if (href_list["reloadwhitelists"])
+		if(!check_rights(R_ADMIN))
+			return
+		whitelist_panel()
+
+	else if (href_list["newwhitelist"])
+		if(!check_rights(R_ADMIN))
+			return
+		usr.client.grant_whitelist()
+		whitelist_panel()
+
+	else if (href_list["searchwhitelistckey"])
+		whitelist_panel(href_list["searchwhitelistckey"])
 
 /datum/admins/proc/HandleCMode()
 	if(!check_rights(R_ADMIN))

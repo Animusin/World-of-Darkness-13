@@ -52,12 +52,16 @@
 	var/folded_state = "phone0"
 
 /obj/item/vamp/phone/Initialize()
-	..()
-	RegisterSignal(src, COMSIG_MOVABLE_HEAR, .proc/handle_hearing)
+	. = ..()
+	RegisterSignal(src, COMSIG_MOVABLE_HEAR, PROC_REF(handle_hearing))
 	if(!number || number == "")
 		number = create_unique_phone_number(exchange_num)
 		GLOB.phone_numbers_list += number
 		GLOB.phones_list += src
+		if(ishuman(loc))
+			var/mob/living/carbon/human/H = loc
+			if(H.Myself)
+				H.Myself.phone_number = number
 
 /obj/item/vamp/phone/Destroy()
 	GLOB.phone_numbers_list -= number
@@ -254,8 +258,9 @@
 					if (!islist(GLOB.published_number_names))
 						GLOB.published_number_names = list()
 
-					var/name = input(usr, "Input name", "Publish Number") as text|null
+					var/name = input(usr, "Input name", "Publish Number") as null|text
 					if(name && src.number)
+						name = trim(copytext_char(sanitize(name), 1, MAX_MESSAGE_LEN))
 						if(src.number in GLOB.published_numbers)
 							to_chat(usr, "<span class ='notice'>This number is already published.</span>")
 						else
@@ -277,13 +282,15 @@
 						var/name = GLOB.published_number_names[i]
 						to_chat(usr, "- [name]: [split_number]")
 				if("Add")
-					var/new_contact = input(usr, "Input phone number", "Add Contact")  as text|null
+					var/new_contact = input(usr, "Input phone number", "Add Contact")  as null|text
 					if(new_contact)
+						new_contact = trim(copytext_char(sanitize(new_contact), 1, MAX_MESSAGE_LEN))
 						var/datum/phonecontact/NEWC = new()
 						new_contact = replacetext(new_contact, " ", "") //Removes spaces
 						NEWC.number = "[new_contact]"
 						contacts += NEWC
-						var/new_contact_name = input(usr, "Input name", "Add Contact")  as text|null
+						var/new_contact_name = input(usr, "Input name", "Add Contact")  as null|text
+						new_contact_name = trim(copytext_char(sanitize(new_contact_name), 1, MAX_MESSAGE_LEN))
 						if(new_contact_name)
 							NEWC.name = "[new_contact_name]"
 						else
@@ -357,7 +364,7 @@
 	if(!talking && online)
 		playsound(src, 'code/modules/wod13/sounds/phone.ogg', 10, FALSE)
 		playsound(online, online.call_sound, 25, FALSE)
-		addtimer(CALLBACK(src, .proc/Recall, online, usar), 20)
+		addtimer(CALLBACK(src, PROC_REF(Recall), online, usar), 20)
 //	usar << browse(null, "window=phone")
 //	OpenMenu(usar)
 /*
@@ -516,8 +523,8 @@
 
 /obj/item/vamp/phone/street
 	desc = "An ordinary street payphone"
-	icon = 'code/modules/wod13/onfloor.dmi'
-	icon_state = "streetphone"
+	icon = 'code/modules/wod13/props.dmi'
+	icon_state = "payphone"
 	anchored = TRUE
 	number = "1447"
 	can_fold = 0

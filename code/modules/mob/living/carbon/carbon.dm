@@ -12,7 +12,7 @@
 
 	GLOB.carbon_list += src
 	if(!mapload)  //I don't want no gas leaks on my space ruin you hear?
-		RegisterSignal(src, COMSIG_LIVING_DEATH, .proc/attach_rot)
+		RegisterSignal(src, COMSIG_LIVING_DEATH, PROC_REF(attach_rot))
 
 /mob/living/carbon/Destroy()
 	//This must be done first, so the mob ghosts correctly before DNA etc is nulled
@@ -201,7 +201,12 @@
 		return
 
 	var/mob/living/carbon/H = src
-	var/physique = H.physique
+	var/physique = H.physique + H.additional_physique 
+
+	if(HAS_TRAIT(H, TRAIT_IMMOBILIZED) || H.legcuffed)
+		return
+	if(pulledby && H.pulledby.grab_state >= GRAB_PASSIVE)
+		return
 
 	var/current_time = world.time
 	var/adjusted_jump_delay = JUMP_DELAY - (0.4 * dexterity) - (1 * athletics)
@@ -499,7 +504,7 @@
 
 	switch(rand(1,100)+modifier) //91-100=Nothing special happens
 		if(-INFINITY to 0) //attack yourself
-			INVOKE_ASYNC(I, /obj/item.proc/attack, src, src)
+			INVOKE_ASYNC(I, TYPE_PROC_REF(/obj/item, attack), src, src)
 		if(1 to 30) //throw it at yourself
 			I.throw_impact(src)
 		if(31 to 60) //Throw object in facing direction
@@ -894,14 +899,23 @@
 		else if(health > HEALTH_THRESHOLD_NEARDEATH)
 			REMOVE_TRAIT(src, TRAIT_SIXTHSENSE, "near-death")
 
-
 /mob/living/carbon/update_stat()
 	if(status_flags & GODMODE)
 		return
 	if(stat != DEAD)
-		if(health <= HEALTH_THRESHOLD_DEAD && !HAS_TRAIT(src, TRAIT_NODEATH))
-			death()
-			return
+		//special death handling for vampires, who don't die until -200 health
+		if (iskindred(src))
+			if(health <= HEALTH_THRESHOLD_VAMPIRE_DEAD && !HAS_TRAIT(src, TRAIT_NODEATH))
+				death()
+				return
+			if((health <= HEALTH_THRESHOLD_VAMPIRE_TORPOR) && !HAS_TRAIT(src, TRAIT_TORPOR))
+				spawn()
+					torpor("damage")
+		else
+			if(health <= HEALTH_THRESHOLD_DEAD && !HAS_TRAIT(src, TRAIT_NODEATH))
+				death()
+				return
+
 		if(health <= hardcrit_threshold && !HAS_TRAIT(src, TRAIT_NOHARDCRIT))
 			set_stat(HARD_CRIT)
 		else if(HAS_TRAIT(src, TRAIT_KNOCKEDOUT))
@@ -1155,7 +1169,7 @@
 		for(var/i in artpaths)
 			var/datum/martial_art/M = i
 			artnames[initial(M.name)] = M
-		var/result = input(usr, "Choose the martial art to teach","JUDO CHOP") as null|anything in sortList(artnames, /proc/cmp_typepaths_asc)
+		var/result = input(usr, "Choose the martial art to teach","JUDO CHOP") as null|anything in sortList(artnames, GLOBAL_PROC_REF(cmp_typepaths_asc))
 		if(!usr)
 			return
 		if(QDELETED(src))
@@ -1171,7 +1185,7 @@
 		if(!check_rights(NONE))
 			return
 		var/list/traumas = subtypesof(/datum/brain_trauma)
-		var/result = input(usr, "Choose the brain trauma to apply","Traumatize") as null|anything in sortList(traumas, /proc/cmp_typepaths_asc)
+		var/result = input(usr, "Choose the brain trauma to apply","Traumatize") as null|anything in sortList(traumas, GLOBAL_PROC_REF(cmp_typepaths_asc))
 		if(!usr)
 			return
 		if(QDELETED(src))
@@ -1193,7 +1207,7 @@
 		if(!check_rights(NONE))
 			return
 		var/list/hallucinations = subtypesof(/datum/hallucination)
-		var/result = input(usr, "Choose the hallucination to apply","Send Hallucination") as null|anything in sortList(hallucinations, /proc/cmp_typepaths_asc)
+		var/result = input(usr, "Choose the hallucination to apply","Send Hallucination") as null|anything in sortList(hallucinations, GLOBAL_PROC_REF(cmp_typepaths_asc))
 		if(!usr)
 			return
 		if(QDELETED(src))
