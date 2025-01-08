@@ -985,12 +985,38 @@
 	vampire_faction = "City"
 	staying = TRUE
 	is_talking = TRUE
+	var/last_time_mugged = 0
 
 /mob/living/carbon/human/npc/shop/Initialize()
 	..()
 	if(prob(66))
 		base_body_mod = "f"
 	AssignSocialRole(/datum/socialrole/shop)
+
+/mob/living/carbon/human/npc/shop/Annoy(var/atom/source)
+	..()
+	if(ishuman(source))
+		var/mob/living/carbon/human/H = source
+		var/mypower = get_total_mentality()
+		var/theirpower = H.get_total_social()
+		if((world.time - last_time_mugged) > 10 MINUTES)
+			if(mypower <= theirpower && prob(50))
+
+				RealisticSay("Alright. I will pay, but only this time...")
+
+				if(prob(50) && mypower >= theirpower-2)
+					for(var/obj/item/police_radio/P in GLOB.police_radios)
+						P.announce_crime("mugging", get_turf(src))
+					for(var/obj/item/p25radio/police/P in GLOB.p25_radios)
+						if(P.linked_network == "police")
+							P.announce_crime("mugging", get_turf(src))
+
+				last_time_mugged = world.time
+
+				new /obj/item/stack/dollar/hundred(source)
+		else
+			if(mypower <= theirpower && prob(50))
+				RealisticSay("Listen... I don't have any money right now. Come later...")
 
 /datum/socialrole/shop/bacotell
 	uniforms = list(/obj/item/clothing/under/vampire/bacotell)

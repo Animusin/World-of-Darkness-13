@@ -24,5 +24,28 @@
 					emote("scream")
 				else
 					RealisticSay(pick(socialrole.help_phrases))
+					Mugged(M)
 			else
 				RealisticSay(pick(socialrole.help_phrases))
+
+/mob/living/carbon/human/npc/proc/Mugged(var/mob/M)
+	if(ishuman(M))
+		var/mob/living/carbon/human/H = M
+		var/mypower = get_total_mentality()
+		var/theirpower = H.get_total_social()
+		if(mypower <= theirpower && prob(50))
+			var/obj/item/stack/dollar/D = locate(/obj/item/stack/dollar) in contents
+			if(D)
+				var/turf/T = get_turf(src)
+				D.forceMove(T)
+				if(prob(50))
+					var/witness_count = 0
+					for(var/mob/living/carbon/human/npc/NEPIC in viewers(7, src))
+						if(NEPIC && NEPIC.stat != DEAD)
+							witness_count++
+					if(witness_count > 1)
+						for(var/obj/item/police_radio/P in GLOB.police_radios)
+							P.announce_crime("mugging", get_turf(src))
+						for(var/obj/item/p25radio/police/P in GLOB.p25_radios)
+							if(P.linked_network == "police")
+								P.announce_crime("mugging", get_turf(src))
